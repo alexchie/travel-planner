@@ -1,36 +1,66 @@
+import { useState } from 'react'
 import { useDispatch, useAppState } from '../../store'
 import { TRANSPORT_LABEL, MEAL_TYPE_LABEL } from '../../types'
 import { detectConflicts } from '../../optimizer/conflictDetection'
 import { optimize } from '../../optimizer'
+import { saveSession } from '../../lib/supabase'
+import { isClaudeConfigured, optimizeWithClaude } from '../../lib/claudeOptimizer'
 
 export default function Step5Review() {
   const state = useAppState()
   const dispatch = useDispatch()
   const { trip, attractions, restaurants, accommodations, loading } = state
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   function back() {
     dispatch({ type: 'SET_STEP', step: 4 })
   }
 
-  function run() {
+  async function run() {
     if (!trip) return
     dispatch({ type: 'SET_LOADING', loading: true })
-
-    setTimeout(() => {
+    setErrorMsg(null)
+    try {
       const conflicts = detectConflicts(attractions, restaurants, trip.transportMode)
       if (conflicts.length > 0) {
         dispatch({ type: 'SET_RESULT', original: [], conflicts })
         return
       }
-      const itinerary = optimize(trip, attractions, restaurants, accommodations)
+
+      let itinerary
+      if (isClaudeConfigured) {
+        try {
+          itinerary = await optimizeWithClaude(trip, attractions, restaurants, accommodations)
+        } catch (e) {
+          console.warn('Claude fallback:', e)
+          itinerary = optimize(trip, attractions, restaurants, accommodations)
+        }
+      } else {
+        itinerary = optimize(trip, attractions, restaurants, accommodations)
+      }
+
       dispatch({ type: 'SET_RESULT', original: itinerary, conflicts: [] })
-    }, 600)
+      saveSession({
+        trip_info: trip,
+        attractions,
+        restaurants,
+        accommodations,
+        itinerary,
+        total_days: itinerary.length,
+        total_stops: itinerary.reduce((s, d) => s + d.stops.filter((st) => st.type !== 'accommodation').length, 0),
+      })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      setErrorMsg(`規劃失敗：${msg}`)
+      dispatch({ type: 'SET_LOADING', loading: false })
+    }
   }
 
   if (!trip) return null
 
-  const totalDays = Math.ceil(
-    (new Date(trip.departureDatetime).getTime() - new Date(trip.arrivalDatetime).getTime()) /
+  const totalDays = Math.round(
+    (new Date(trip.departureDatetime.slice(0, 10)).getTime() -
+      new Date(trip.arrivalDatetime.slice(0, 10)).getTime()) /
       (1000 * 60 * 60 * 24)
   ) + 1
 
@@ -64,7 +94,7 @@ export default function Step5Review() {
           <div className="bg-gray-50 rounded-lg p-3 text-center">
             <div className="text-2xl font-bold text-amber-600">{restaurants.length}</div>
             <div className="text-xs text-gray-500 mt-0.5">餐廳/小吃</div>
-            <div className="text-xs text-gray-400 text-xs">
+            <div className="text-xs text-gray-400">
               {[...new Set(restaurants.map((r) => r.mealType))]
                 .map((m) => MEAL_TYPE_LABEL[m])
                 .join('、') || '無'}
@@ -72,7 +102,7 @@ export default function Step5Review() {
           </div>
           <div className="bg-gray-50 rounded-lg p-3 text-center">
             <div className="text-2xl font-bold text-green-600">{accommodations.length}</div>
-            <div className="text-xs text-gray-500 mt-0.5">住宿</div>
+            <div className="text-xs text-gray-500 mt-0.5">住宿（{totalDays - 1} 晚）</div>
           </div>
         </div>
 
@@ -114,12 +144,39 @@ export default function Step5Review() {
           </div>
         )}
 
+        {accommodations.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">住宿清單</h3>
+            <div className="space-y-1">
+              {accommodations.map((a) => (
+                <div key={a.dayIndex} className="flex items-center gap-2 text-sm text-gray-600">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-bold">
+                    {a.dayIndex}
+                  </span>
+                  <span className="font-medium">{a.name || '（未命名住宿）'}</span>
+                  {a.location.lat !== 0 && (
+                    <span className="text-gray-400 text-xs truncate">
+                      {a.location.address.split(',')[0]}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {state.conflicts.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2">
             <h3 className="text-sm font-semibold text-red-700">偵測到衝突，請修正後重新送出</h3>
             {state.conflicts.map((c, i) => (
               <p key={i} className="text-sm text-red-600">{c.message}</p>
             ))}
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600">
+            {errorMsg}
           </div>
         )}
       </div>
@@ -133,7 +190,7 @@ export default function Step5Review() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
               </svg>
-              計算最佳行程中…
+              {isClaudeConfigured ? 'Claude 規劃行程中…' : '計算最佳行程中…'}
             </>
           ) : (
             '開始規劃行程'

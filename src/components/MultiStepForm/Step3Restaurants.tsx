@@ -14,11 +14,11 @@ function emptyRestaurant(): Restaurant {
     name: '',
     location: EMPTY_GEO,
     openHours: defaultOpenHours(),
-    mealType: 'lunch',
+    mealType: 'any',
     mealAssignmentMode: 'flexible',
     assignedDay: null,
     dishType: 'full_meal',
-    priority: 'flexible',
+    priority: 'must',
   }
 }
 
@@ -126,20 +126,15 @@ export default function Step3Restaurants() {
             {expanded === r.id && (
               <div className="px-4 pb-4 space-y-4 border-t border-gray-100 bg-gray-50">
                 <div className="pt-4">
-                  <label className="label">名稱</label>
-                  <input
-                    className="input"
-                    value={r.name}
-                    onChange={(e) => update(r.id, { name: e.target.value })}
-                    placeholder="例：鼎泰豐"
+                  <GeoInput
+                    label="餐廳名稱（輸入即自動搜尋地址）"
+                    value={r.location}
+                    onChange={(loc) => update(r.id, { location: loc })}
+                    onOpenHours={(hours) => update(r.id, { openHours: hours })}
+                    nameValue={r.name}
+                    onNameChange={(name) => update(r.id, { name })}
                   />
                 </div>
-
-                <GeoInput
-                  label="地點"
-                  value={r.location}
-                  onChange={(loc) => update(r.id, { location: loc })}
-                />
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>

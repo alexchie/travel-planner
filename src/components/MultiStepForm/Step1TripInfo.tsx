@@ -3,6 +3,7 @@ import { useDispatch, useAppState } from '../../store'
 import type { TripInfo, GeoPoint, TransportMode } from '../../types'
 import { TRANSPORT_LABEL } from '../../types'
 import GeoInput from './GeoInput'
+import DateTimePicker24 from './DateTimePicker24'
 
 const EMPTY_GEO: GeoPoint = { lat: 0, lng: 0, address: '' }
 
@@ -16,7 +17,7 @@ export default function Step1TripInfo() {
       departureDatetime: '',
       startLocation: EMPTY_GEO,
       endLocation: EMPTY_GEO,
-      transportMode: 'driving',
+      transportMode: 'car',
     }
   )
 
@@ -54,24 +55,16 @@ export default function Step1TripInfo() {
       <h2 className="section-title">行程基本資訊</h2>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="label">抵達時間</label>
-          <input
-            type="datetime-local"
-            className="input"
-            value={form.arrivalDatetime}
-            onChange={(e) => setForm((f) => ({ ...f, arrivalDatetime: e.target.value }))}
-          />
-        </div>
-        <div>
-          <label className="label">離開時間</label>
-          <input
-            type="datetime-local"
-            className="input"
-            value={form.departureDatetime}
-            onChange={(e) => setForm((f) => ({ ...f, departureDatetime: e.target.value }))}
-          />
-        </div>
+        <DateTimePicker24
+          label="抵達時間"
+          value={form.arrivalDatetime}
+          onChange={(v) => setForm((f) => ({ ...f, arrivalDatetime: v }))}
+        />
+        <DateTimePicker24
+          label="離開時間"
+          value={form.departureDatetime}
+          onChange={(v) => setForm((f) => ({ ...f, departureDatetime: v }))}
+        />
       </div>
 
       {form.arrivalDatetime && form.departureDatetime && form.arrivalDatetime > form.departureDatetime && (

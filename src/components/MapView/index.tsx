@@ -1,34 +1,65 @@
-import { useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
-import L from 'leaflet'
-import type { DayItinerary } from '../../types'
+import { useEffect, useRef } from 'react'
+import {
+  APIProvider,
+  Map,
+  Marker,
+  useMap,
+  useMapsLibrary,
+} from '@vis.gl/react-google-maps'
+import type { DayItinerary, Stop } from '../../types'
+import { useAppState } from '../../store'
 
-// Fix Leaflet default icon paths
-delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-})
+const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY as string | undefined
 
-function createNumberedIcon(n: number, color: string) {
-  return L.divIcon({
-    className: '',
-    html: `<div style="background:${color};color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3)">${n}</div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-  })
+const TRAVEL_MODE_MAP: Record<string, string> = {
+  motorcycle: 'DRIVING',
+  car: 'DRIVING',
+  bicycle: 'BICYCLING',
+  ubike: 'BICYCLING',
+  walking: 'WALKING',
+  transit: 'TRANSIT',
 }
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
-
-function FitBounds({ positions }: { positions: [number, number][] }) {
+function RouteLayer({ stops, transportMode }: { stops: Stop[]; transportMode: string }) {
   const map = useMap()
+  const routesLib = useMapsLibrary('routes')
+  const rendererRef = useRef<google.maps.DirectionsRenderer | null>(null)
+
   useEffect(() => {
-    if (positions.length > 0) {
-      map.fitBounds(L.latLngBounds(positions), { padding: [40, 40] })
+    if (!routesLib || !map) return
+    const valid = stops.filter((s) => s.location.lat !== 0 && s.location.lng !== 0)
+    if (valid.length < 2) return
+
+    const renderer = new routesLib.DirectionsRenderer({
+      suppressMarkers: true,
+      polylineOptions: { strokeColor: '#3b82f6', strokeWeight: 3, strokeOpacity: 0.75 },
+    })
+    renderer.setMap(map)
+    rendererRef.current = renderer
+
+    const service = new routesLib.DirectionsService()
+    service.route(
+      {
+        origin: { lat: valid[0].location.lat, lng: valid[0].location.lng },
+        destination: { lat: valid[valid.length - 1].location.lat, lng: valid[valid.length - 1].location.lng },
+        waypoints: valid.slice(1, -1).slice(0, 23).map((s) => ({
+          location: { lat: s.location.lat, lng: s.location.lng },
+          stopover: true,
+        })),
+        travelMode: (TRAVEL_MODE_MAP[transportMode] ?? 'DRIVING') as google.maps.TravelMode,
+        optimizeWaypoints: false,
+      },
+      (result, status) => {
+        if (status === 'OK' && result) renderer.setDirections(result)
+      }
+    )
+
+    return () => {
+      renderer.setMap(null)
+      rendererRef.current = null
     }
-  }, [map, positions])
+  }, [routesLib, map, stops, transportMode])
+
   return null
 }
 
@@ -37,49 +68,45 @@ interface Props {
   dayIdx: number
 }
 
-export default function MapView({ day, dayIdx }: Props) {
-  const color = COLORS[dayIdx % COLORS.length]
-  const validStops = day.stops.filter(
-    (s) => s.location.lat !== 0 && s.location.lng !== 0
-  )
-  const positions: [number, number][] = validStops.map((s) => [s.location.lat, s.location.lng])
+export default function MapView({ day }: Props) {
+  const { trip } = useAppState()
+  const transportMode = trip?.transportMode ?? 'car'
 
-  const center: [number, number] =
-    positions.length > 0
-      ? [
-          positions.reduce((s, p) => s + p[0], 0) / positions.length,
-          positions.reduce((s, p) => s + p[1], 0) / positions.length,
-        ]
-      : [23.6978, 120.9605]
+  if (!GOOGLE_KEY) {
+    return (
+      <div className="h-72 flex items-center justify-center bg-gray-50 text-sm text-gray-400 rounded-lg">
+        需要設定 Google Maps API Key
+      </div>
+    )
+  }
+
+  const validStops = day.stops.filter((s) => s.location.lat !== 0 && s.location.lng !== 0)
+  const center =
+    validStops.length > 0
+      ? {
+          lat: validStops.reduce((s, p) => s + p.location.lat, 0) / validStops.length,
+          lng: validStops.reduce((s, p) => s + p.location.lng, 0) / validStops.length,
+        }
+      : { lat: 23.6978, lng: 120.9605 }
 
   return (
-    <MapContainer center={center} zoom={12} style={{ height: '320px', width: '100%' }}>
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {positions.length > 1 && (
-        <Polyline positions={positions} color={color} weight={3} opacity={0.8} />
-      )}
-      {validStops.map((stop, i) => (
-        <Marker
-          key={stop.id}
-          position={[stop.location.lat, stop.location.lng]}
-          icon={createNumberedIcon(i + 1, stop.type === 'accommodation' ? '#6b7280' : color)}
-        >
-          <Popup>
-            <div className="text-sm">
-              <strong>{stop.name}</strong>
-              <br />
-              {stop.arrivalTime} – {stop.departureTime}
-              {stop.hasWarning && (
-                <div className="text-orange-500 mt-1 text-xs">{stop.warningMessage}</div>
-              )}
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-      <FitBounds positions={positions} />
-    </MapContainer>
+    <APIProvider apiKey={GOOGLE_KEY}>
+      <Map
+        style={{ width: '100%', height: '360px' }}
+        defaultCenter={center}
+        defaultZoom={12}
+        gestureHandling="greedy"
+      >
+        {validStops.map((stop, i) => (
+          <Marker
+            key={stop.id}
+            position={{ lat: stop.location.lat, lng: stop.location.lng }}
+            label={{ text: String(i + 1), color: 'white', fontWeight: 'bold', fontSize: '13px' }}
+            title={`${i + 1}. ${stop.name} (${stop.arrivalTime})`}
+          />
+        ))}
+        <RouteLayer stops={validStops} transportMode={transportMode} />
+      </Map>
+    </APIProvider>
   )
 }

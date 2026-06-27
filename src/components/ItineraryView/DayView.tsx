@@ -11,7 +11,6 @@ import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-  arrayMove,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { DayItinerary, Stop } from '../../types'
@@ -34,10 +33,12 @@ function StopCard({
   stop,
   index,
   isEditing,
+  onRemove,
 }: {
   stop: Stop
   index: number
   isEditing: boolean
+  onRemove?: () => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: stop.id,
@@ -101,6 +102,14 @@ function StopCard({
                 )}
               </div>
             </div>
+            {isEditing && stop.type !== 'accommodation' && onRemove && (
+              <button
+                onClick={onRemove}
+                className="text-gray-300 hover:text-red-500 text-lg leading-none flex-shrink-0 mt-0.5"
+              >
+                ×
+              </button>
+            )}
           </div>
           {stop.hasWarning && stop.warningMessage && (
             <div className="mt-1.5 text-xs text-orange-600 bg-orange-100 rounded px-2 py-1">
@@ -118,9 +127,11 @@ interface Props {
   dayIdx: number
   isEditing: boolean
   onReorder: (fromIdx: number, toIdx: number) => void
+  onAddStop?: () => void
+  onRemoveStop?: (stopId: string) => void
 }
 
-export default function DayView({ day, dayIdx, isEditing, onReorder }: Props) {
+export default function DayView({ day, dayIdx, isEditing, onReorder, onAddStop, onRemoveStop }: Props) {
   const [showMap, setShowMap] = useState(false)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
@@ -172,11 +183,26 @@ export default function DayView({ day, dayIdx, isEditing, onReorder }: Props) {
         >
           <div className="space-y-1">
             {day.stops.map((stop, i) => (
-              <StopCard key={stop.id} stop={stop} index={i} isEditing={isEditing} />
+              <StopCard
+                key={stop.id}
+                stop={stop}
+                index={i}
+                isEditing={isEditing}
+                onRemove={onRemoveStop ? () => onRemoveStop(stop.id) : undefined}
+              />
             ))}
           </div>
         </SortableContext>
       </DndContext>
+
+      {isEditing && onAddStop && (
+        <button
+          onClick={onAddStop}
+          className="w-full py-2 border-2 border-dashed border-blue-300 text-blue-500 hover:border-blue-400 hover:text-blue-600 rounded-lg text-sm font-medium transition-colors"
+        >
+          + 新增地點
+        </button>
+      )}
     </div>
   )
 }

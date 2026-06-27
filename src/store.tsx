@@ -36,6 +36,8 @@ type Action =
   | { type: 'SET_LOADING'; loading: boolean }
   | { type: 'GO_TO_FORM' }
   | { type: 'GO_TO_RESULT' }
+  | { type: 'ADD_STOP'; dayIndex: number; stop: import('./types').Stop }
+  | { type: 'REMOVE_STOP'; dayIndex: number; stopId: string }
 
 const initial: AppState = {
   page: 'form',
@@ -93,6 +95,33 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, page: 'form', currentStep: 1 }
     case 'GO_TO_RESULT':
       return { ...state, page: 'result' }
+    case 'ADD_STOP': {
+      if (!state.editedItinerary) return state
+      return {
+        ...state,
+        editedItinerary: state.editedItinerary.map((day) => {
+          if (day.dayIndex !== action.dayIndex) return day
+          const stops = [...day.stops]
+          const lastIdx = stops.length - 1
+          if (stops[lastIdx]?.type === 'accommodation') {
+            stops.splice(lastIdx, 0, action.stop)
+          } else {
+            stops.push(action.stop)
+          }
+          return { ...day, stops }
+        }),
+      }
+    }
+    case 'REMOVE_STOP': {
+      if (!state.editedItinerary) return state
+      return {
+        ...state,
+        editedItinerary: state.editedItinerary.map((day) => {
+          if (day.dayIndex !== action.dayIndex) return day
+          return { ...day, stops: day.stops.filter((s) => s.id !== action.stopId) }
+        }),
+      }
+    }
     default:
       return state
   }

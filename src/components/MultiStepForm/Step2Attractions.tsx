@@ -15,7 +15,7 @@ function emptyAttraction(): Attraction {
     location: EMPTY_GEO,
     openHours: defaultOpenHours(),
     durationMinutes: 60,
-    priority: 'flexible',
+    priority: 'must',
     timeWindowRequired: null,
   }
 }
@@ -98,20 +98,15 @@ export default function Step2Attractions() {
             {expanded === attr.id && (
               <div className="px-4 pb-4 space-y-4 border-t border-gray-100 bg-gray-50">
                 <div className="pt-4">
-                  <label className="label">景點名稱</label>
-                  <input
-                    className="input"
-                    value={attr.name}
-                    onChange={(e) => update(attr.id, { name: e.target.value })}
-                    placeholder="例：日月潭"
+                  <GeoInput
+                    label="景點名稱（輸入即自動搜尋地址）"
+                    value={attr.location}
+                    onChange={(loc) => update(attr.id, { location: loc })}
+                    onOpenHours={(hours) => update(attr.id, { openHours: hours })}
+                    nameValue={attr.name}
+                    onNameChange={(name) => update(attr.id, { name })}
                   />
                 </div>
-
-                <GeoInput
-                  label="地點"
-                  value={attr.location}
-                  onChange={(loc) => update(attr.id, { location: loc })}
-                />
 
                 <div>
                   <label className="label">

@@ -11,7 +11,7 @@ import type {
 import { travelMinutes } from './distance'
 import { v4 as uuidv4 } from 'uuid'
 
-const MEAL_WINDOWS: Record<MealType, { start: number; end: number }> = {
+const MEAL_WINDOWS: Record<Exclude<MealType, 'any'>, { start: number; end: number }> = {
   breakfast: { start: 7 * 60, end: 10 * 60 },
   lunch: { start: 11 * 60 + 30, end: 14 * 60 },
   dinner: { start: 17 * 60 + 30, end: 21 * 60 },
@@ -131,7 +131,7 @@ export function optimize(
       location: r.location,
       durationMinutes: r.dishType === 'snack' ? 30 : 60,
       type: 'restaurant' as const,
-      mealType: r.mealType,
+      mealType: r.mealType === 'any' ? undefined : r.mealType,
       priority: r.priority,
       fixedDay:
         r.mealAssignmentMode === 'fixed_day' && r.assignedDay != null
@@ -171,8 +171,8 @@ export function optimize(
       startMin: i.fixedStartMinutes!,
     }))
 
-    // Start time (based on trip arrival or 8am)
-    let cursor = dayIdx === 0 ? timeToMinutes(trip.arrivalDatetime.slice(11, 16)) : 8 * 60
+    // Start time (based on trip arrival or 9am)
+    let cursor = dayIdx === 0 ? timeToMinutes(trip.arrivalDatetime.slice(11, 16)) : 9 * 60
 
     // Sort slots by time
     slots.sort((a, b) => a.startMin - b.startMin)
@@ -183,28 +183,35 @@ export function optimize(
     const unscheduled = flexItems.filter((i) => !slots.find((s) => s.item.id === i.id))
 
     // Try to fit meal slots in appropriate windows
-    const mealItems = unscheduled.filter((i) => i.mealType)
-    const nonMealItems = unscheduled.filter((i) => !i.mealType)
+    const mealItems = unscheduled.filter((i) => i.mealType && i.mealType in MEAL_WINDOWS)
+    const nonMealItems = unscheduled.filter((i) => !i.mealType || !(i.mealType in MEAL_WINDOWS))
+
+    const CURFEW = 22 * 60 + 30
 
     const toInsert = [...nonMealItems]
     for (const meal of mealItems) {
-      const window = MEAL_WINDOWS[meal.mealType!]
+      const window = MEAL_WINDOWS[meal.mealType as Exclude<MealType, 'any'>]
       const startMin = Math.max(cursor, window.start)
-      if (startMin < window.end) {
-        scheduled.push({ item: meal, startMin })
-        cursor = startMin + meal.durationMinutes
-      }
+      if (startMin >= window.end) continue
+      const mealEnd = startMin + meal.durationMinutes
+      const travelBack = travelMinutes(meal.location, endLoc, mode)
+      if (mealEnd + travelBack > CURFEW) continue
+      scheduled.push({ item: meal, startMin })
+      cursor = mealEnd
     }
 
     // Greedy insert non-meal attractions
     let positions = [...scheduled]
     for (const item of toInsert) {
-      if (!isOpenOnDay(item, dayKey, cursor)) continue
       const travel = travelMinutes(currentLoc, item.location, mode)
-      cursor += travel
-      if (cursor + item.durationMinutes > 21 * 60) continue
-      positions.push({ item, startMin: cursor })
-      cursor += item.durationMinutes
+      const arrival = cursor + travel
+      if (!isOpenOnDay(item, dayKey, arrival)) continue
+      const departure = arrival + item.durationMinutes
+      if (departure > 21 * 60) continue
+      const travelBack = travelMinutes(item.location, endLoc, mode)
+      if (departure + travelBack > CURFEW) continue
+      positions.push({ item, startMin: arrival })
+      cursor = departure
       currentLoc = item.location
     }
 
@@ -229,7 +236,7 @@ export function optimize(
     // Build stops with actual times
     const stops: Stop[] = []
     let prevLoc = startLoc
-    let time = dayIdx === 0 ? timeToMinutes(trip.arrivalDatetime.slice(11, 16)) : 8 * 60
+    let time = dayIdx === 0 ? timeToMinutes(trip.arrivalDatetime.slice(11, 16)) : 9 * 60
 
     // Add start accommodation/location as first stop if day > 1
     if (dayIdx > 0 && accom) {

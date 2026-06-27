@@ -1,6 +1,6 @@
-export type TransportMode = 'walking' | 'driving' | 'transit'
+export type TransportMode = 'motorcycle' | 'car' | 'bicycle' | 'ubike' | 'walking' | 'transit'
 export type Priority = 'must' | 'flexible'
-export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'afternoon_tea'
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'afternoon_tea' | 'any'
 export type MealAssignmentMode = 'fixed_day' | 'fixed_meal_only' | 'flexible'
 export type DishType = 'full_meal' | 'snack'
 export type VersionType = 'original' | 'edited_copy'
@@ -97,6 +97,7 @@ export const SNACK_REQUIRED: Record<MealType, number> = {
   lunch: 3,
   dinner: 3,
   afternoon_tea: 1,
+  any: 0,
 }
 
 export const MEAL_TYPE_LABEL: Record<MealType, string> = {
@@ -104,12 +105,16 @@ export const MEAL_TYPE_LABEL: Record<MealType, string> = {
   lunch: '午餐',
   dinner: '晚餐',
   afternoon_tea: '下午茶',
+  any: '都可以',
 }
 
 export const TRANSPORT_LABEL: Record<TransportMode, string> = {
-  walking: '步行',
-  driving: '開車',
-  transit: '大眾運輸',
+  motorcycle: '機車',
+  car: '汽車',
+  bicycle: '腳踏車',
+  ubike: 'Ubike',
+  walking: '走路',
+  transit: '大眾交通',
 }
 
 export const PRIORITY_LABEL: Record<Priority, string> = {

@@ -1,8 +1,11 @@
 import type { GeoPoint, TransportMode } from '../types'
 
 const SPEED_KMH: Record<TransportMode, number> = {
+  motorcycle: 50,
+  car: 40,
+  bicycle: 15,
+  ubike: 12,
   walking: 5,
-  driving: 40,
   transit: 25,
 }
 
