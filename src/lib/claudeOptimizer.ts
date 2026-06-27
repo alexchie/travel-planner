@@ -1,10 +1,116 @@
 import { v4 as uuidv4 } from 'uuid'
-import type { TripInfo, Attraction, Restaurant, Accommodation, DayItinerary, GeoPoint } from '../types'
+import type { TripInfo, Attraction, Restaurant, Accommodation, DayItinerary, GeoPoint, OpenHours, Stop } from '../types'
 import { MEAL_TYPE_LABEL, TRANSPORT_LABEL } from '../types'
 import { computeTravelMatrix } from './googleMapsDistance'
 
 const ANTHROPIC_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY as string | undefined
 export const isClaudeConfigured = !!ANTHROPIC_KEY
+
+function extractJsonArray(text: string): string | null {
+  const start = text.indexOf('[{')
+  if (start === -1) return null
+  let depth = 0
+  let inString = false
+  let escape = false
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i]
+    if (escape) { escape = false; continue }
+    if (inString) {
+      if (ch === '\\') escape = true
+      else if (ch === '"') inString = false
+      continue
+    }
+    if (ch === '"') { inString = true; continue }
+    if (ch === '[' || ch === '{') depth++
+    else if (ch === ']' || ch === '}') {
+      depth--
+      if (depth === 0) return text.slice(start, i + 1)
+    }
+  }
+  return null
+}
+
+function timeToMinutes(t: string): number {
+  const [h, m] = (t ?? '00:00').split(':').map(Number)
+  return (h || 0) * 60 + (m || 0)
+}
+
+const DOW_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
+const DOW_ZH = ['日', '一', '二', '三', '四', '五', '六']
+
+function formatOpenHours(oh: OpenHours): string {
+  const parts: string[] = []
+  DOW_KEYS.forEach((k, i) => {
+    const h = oh[k]
+    parts.push(h ? `${DOW_ZH[i]}${h.open}-${h.close}` : `${DOW_ZH[i]}休`)
+  })
+  return parts.join(' ')
+}
+
+function getTripDates(arrivalDatetime: string, departureDatetime: string): string[] {
+  const dates: string[] = []
+  const start = new Date(arrivalDatetime.slice(0, 10))
+  const end = new Date(departureDatetime.slice(0, 10))
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    dates.push(d.toISOString().slice(0, 10))
+  }
+  return dates
+}
+
+function validateAndDedup(
+  itinerary: DayItinerary[],
+  attractions: Attraction[],
+  restaurants: Restaurant[],
+): DayItinerary[] {
+  const seenNames = new Set<string>()
+
+  return itinerary.map((day) => {
+    const dowIdx = day.date ? new Date(day.date).getDay() : -1
+    const dowKey = dowIdx >= 0 ? DOW_KEYS[dowIdx] : null
+    const dowLabel = dowIdx >= 0 ? DOW_ZH[dowIdx] : ''
+
+    const validStops: Stop[] = []
+    for (const stop of day.stops) {
+      if (stop.type === 'accommodation') {
+        validStops.push(stop)
+        continue
+      }
+
+      if (!stop.isAiRecommended) {
+        const nameKey = stop.name.trim().toLowerCase()
+        if (seenNames.has(nameKey)) continue
+        seenNames.add(nameKey)
+      }
+
+      let s = { ...stop }
+
+      if (dowKey && !stop.isAiRecommended) {
+        const attr = attractions.find(a => a.name.trim() === stop.name.trim())
+        const rest = restaurants.find(r => r.name.trim() === stop.name.trim())
+        const oh = attr?.openHours ?? rest?.openHours
+
+        if (oh) {
+          const dh = oh[dowKey]
+          if (!dh) {
+            s = { ...s, hasWarning: true, warningMessage: `週${dowLabel}公休，請調整日期` }
+          } else {
+            const open = timeToMinutes(dh.open)
+            const close = timeToMinutes(dh.close)
+            const arrival = timeToMinutes(s.arrivalTime)
+            const departure = timeToMinutes(s.departureTime)
+            if (arrival < open || departure > close) {
+              s = { ...s, hasWarning: true, warningMessage: `超出營業時間（${dh.open}–${dh.close}）` }
+            }
+          }
+        }
+      }
+
+      validStops.push(s)
+    }
+
+    return { ...day, stops: validStops }
+  })
+}
 
 function buildPrompt(
   trip: TripInfo,
@@ -16,19 +122,42 @@ function buildPrompt(
   matrix: number[][] | null
 ): string {
   const lines: string[] = []
+  const startName = trip.startLocation.address || '起點'
+  const endName = trip.endLocation.address || '終點'
+  const arrivalTime = trip.arrivalDatetime.split('T')[1]?.slice(0, 5) ?? '09:00'
+  const departureTime = trip.departureDatetime.split('T')[1]?.slice(0, 5) ?? '18:00'
+  const totalDays = accommodations.length + 1
+  const tripDates = getTripDates(trip.arrivalDatetime, trip.departureDatetime)
 
   lines.push('你是專業旅遊行程規劃師。根據以下資料規劃最佳多日行程。目標：最小化總交通時間、避免走回頭路、地理相鄰的地點安排在同一天。只輸出 JSON，不要有其他說明文字。')
   lines.push('')
-  lines.push(`行程：抵達 ${trip.arrivalDatetime}，離開 ${trip.departureDatetime}，交通方式：${TRANSPORT_LABEL[trip.transportMode]}`)
-  lines.push(`每天出發點（第一天以抵達時間為準，之後各天 09:00 出發，22:30 前回住宿）`)
+  lines.push(`行程：抵達 ${trip.arrivalDatetime}，離開 ${trip.departureDatetime}，交通方式：${TRANSPORT_LABEL[trip.transportMode]}，共 ${totalDays} 天`)
+  lines.push('')
+  lines.push('行程日期（請注意星期對應營業時間）：')
+  tripDates.forEach((date, i) => {
+    const dow = DOW_ZH[new Date(date).getDay()]
+    lines.push(`  第${i + 1}天 ${date}(星期${dow})`)
+  })
+  lines.push('')
+  lines.push(`起點：${startName} (${trip.startLocation.lat},${trip.startLocation.lng})`)
+  lines.push(`終點：${endName} (${trip.endLocation.lat},${trip.endLocation.lng})`)
+
+  if (accommodations.length > 0) {
+    lines.push('')
+    lines.push('【住宿】')
+    accommodations.forEach((a) => {
+      lines.push(`- 第${a.dayIndex}天晚：${a.name} (${a.location.lat},${a.location.lng})`)
+    })
+  }
 
   if (attractions.length > 0) {
     lines.push('')
     lines.push('【景點】')
     attractions.forEach((a) => {
       const tw = a.timeWindowRequired
+      const hours = formatOpenHours(a.openHours)
       lines.push(
-        `- [${a.id}] ${a.name} (${a.location.lat},${a.location.lng}) 停留${a.durationMinutes}分 ${a.priority === 'must' ? '必去' : '彈性'}${tw ? ` 限定${tw.date} ${tw.startTime}-${tw.endTime}` : ''}`
+        `- [${a.id}] ${a.name} (${a.location.lat},${a.location.lng}) 停留${a.durationMinutes}分 ${a.priority === 'must' ? '必去' : '彈性'}${tw ? ` 限定${tw.date} ${tw.startTime}-${tw.endTime}` : ''} 營業：${hours}`
       )
     })
   }
@@ -37,17 +166,10 @@ function buildPrompt(
     lines.push('')
     lines.push('【餐廳/小吃】')
     restaurants.forEach((r) => {
+      const hours = formatOpenHours(r.openHours)
       lines.push(
-        `- [${r.id}] ${r.name} (${r.location.lat},${r.location.lng}) ${MEAL_TYPE_LABEL[r.mealType]} ${r.dishType === 'snack' ? '小吃' : '正餐'} ${r.priority === 'must' ? '必去' : '彈性'}`
+        `- [${r.id}] ${r.name} (${r.location.lat},${r.location.lng}) ${MEAL_TYPE_LABEL[r.mealType]} ${r.dishType === 'snack' ? '小吃' : '正餐'} ${r.priority === 'must' ? '必去' : '彈性'} 營業：${hours}`
       )
-    })
-  }
-
-  if (accommodations.length > 0) {
-    lines.push('')
-    lines.push('【住宿（每晚必須抵達，作為次日起點）】')
-    accommodations.forEach((a) => {
-      lines.push(`- 第${a.dayIndex}天晚：${a.name} (${a.location.lat},${a.location.lng})`)
     })
   }
 
@@ -68,11 +190,59 @@ function buildPrompt(
   }
 
   lines.push('')
-  lines.push('【規則】')
-  lines.push('- 早餐 07:00-10:00、午餐 11:30-14:00、下午茶 14:30-17:00、晚餐 17:30-21:00、都可以=彈性')
+  lines.push('【規則—地理】')
   lines.push('- 必去景點/餐廳一定要排入；彈性可省略')
   lines.push('- 同一天地點需地理相鄰，嚴格避免來回奔波')
-  lines.push('- travelTimeToNext 請填入兩個相鄰地點間的實際交通分鐘數')
+  lines.push('- 每個地點只能在整個行程中出現一次，不得重複排入')
+  lines.push('- travelTimeToNext 填入到下一個地點的交通分鐘（最後一個 stop 填 0）')
+
+  lines.push('')
+  lines.push('【規則—營業時間（嚴格遵守）】')
+  lines.push('- 每個地點的 arrivalTime 必須 >= 該天營業開始時間')
+  lines.push('- 每個地點的 departureTime (= arrivalTime + durationMinutes) 必須 <= 該天營業結束時間')
+  lines.push('- 若地點在該天標註為「休」，絕對不得安排在那一天，必須改安排到其他天')
+
+  lines.push('')
+  lines.push('【規則—餐食（嚴格遵守）】')
+  lines.push('- 早餐時段：07:00-10:00，午餐時段：11:30-14:00，下午茶時段：14:30-17:00，晚餐時段：17:30-21:00')
+  lines.push('- 每天每個餐別最多只能有 1 個正餐（full_meal），絕對不能同一天出現兩個午餐正餐或兩個晚餐正餐')
+  lines.push('- 每天必須安排早餐、午餐、晚餐各一餐')
+  lines.push('- 小吃（snack）不算在一餐正餐限制內，可另外加入')
+  lines.push('- 【下午茶時段限制】下午茶時段（14:30-17:00）最多只能安排 1 個小吃（snack），絕對不可安排任何正餐（full_meal）')
+  lines.push('- 【塗補規則】若連續兩個用餐 stop 之間（例如午餐後直接接晚餐）沒有任何景點 stop，必須在兩餐之間插入 1~2 個附近合適的景點或活動，並在該 stop 設 isAiRecommended: true')
+
+  lines.push('')
+  lines.push('【每天 stops 陣列結構（嚴格遵守，不得違反）】')
+
+  if (accommodations.length === 0) {
+    lines.push('單日行程：')
+    lines.push(`  stops[0]   = 起點 { type:"accommodation", name:"起點：${startName}", lat:${trip.startLocation.lat}, lng:${trip.startLocation.lng}, arrivalTime:"${arrivalTime}", departureTime:"${arrivalTime}", durationMinutes:0 }`)
+    lines.push('  stops[1..N-1] = 景點/餐廳')
+    lines.push(`  stops[最後] = 終點 { type:"accommodation", name:"終點：${endName}", lat:${trip.endLocation.lat}, lng:${trip.endLocation.lng}, departureTime:"${departureTime}", durationMinutes:0, travelTimeToNext:0 }`)
+  } else {
+    const accom = (d: number) => accommodations.find(a => a.dayIndex === d)
+
+    lines.push(`第1天：`)
+    lines.push(`  stops[0]   = 起點 { type:"accommodation", name:"起點：${startName}", lat:${trip.startLocation.lat}, lng:${trip.startLocation.lng}, arrivalTime:"${arrivalTime}", departureTime:"${arrivalTime}", durationMinutes:0, travelTimeToNext:起點→第一景點交通分鐘 }`)
+    lines.push('  stops[1..N-1] = 景點/餐廳')
+    lines.push(`  stops[最後] = 第1晚住宿「${accom(1)?.name ?? '住宿'}」 { type:"accommodation", travelTimeToNext:0 }`)
+
+    for (let d = 2; d <= totalDays - 1; d++) {
+      const prev = accom(d - 1)
+      const curr = accom(d)
+      lines.push(`第${d}天：`)
+      lines.push(`  stops[0]   = 前一晚住宿「${prev?.name ?? ''}」 { type:"accommodation", lat:${prev?.location.lat ?? 0}, lng:${prev?.location.lng ?? 0}, arrivalTime:"09:00", departureTime:"09:00", durationMinutes:0, travelTimeToNext:住宿→第一景點交通分鐘 }`)
+      lines.push('  stops[1..N-1] = 景點/餐廳')
+      lines.push(`  stops[最後] = 第${d}晚住宿「${curr?.name ?? '住宿'}」 { type:"accommodation", travelTimeToNext:0 }`)
+    }
+
+    const lastAccom = accom(accommodations.length)
+    lines.push(`第${totalDays}天（最後一天）：`)
+    lines.push(`  stops[0]   = 前一晚住宿「${lastAccom?.name ?? ''}」 { type:"accommodation", lat:${lastAccom?.location.lat ?? 0}, lng:${lastAccom?.location.lng ?? 0}, arrivalTime:"09:00", departureTime:"09:00", durationMinutes:0, travelTimeToNext:住宿→第一景點交通分鐘 }`)
+    lines.push('  stops[1..N-1] = 景點/餐廳')
+    lines.push(`  stops[最後] = 終點 { type:"accommodation", name:"終點：${endName}", lat:${trip.endLocation.lat}, lng:${trip.endLocation.lng}, arrivalTime:預計抵達時間, departureTime:"${departureTime}", durationMinutes:0, travelTimeToNext:0 }`)
+  }
+
   lines.push('')
   lines.push('【輸出格式（JSON 陣列，每天一個元素）】')
   lines.push(JSON.stringify([{
@@ -82,7 +252,7 @@ function buildPrompt(
       name: '地點名稱', location: { lat: 0, lng: 0, address: '' },
       arrivalTime: 'HH:MM', departureTime: 'HH:MM',
       durationMinutes: 60, travelTimeToNext: 20,
-      hasWarning: false, mealType: null
+      hasWarning: false, mealType: null, isAiRecommended: false
     }],
     totalTravelMinutes: 60, hasConstraintWarning: false
   }]))
@@ -98,12 +268,14 @@ export async function optimizeWithClaude(
 ): Promise<DayItinerary[]> {
   const locs: GeoPoint[] = [
     trip.startLocation,
+    trip.endLocation,
     ...attractions.map((a) => a.location),
     ...restaurants.map((r) => r.location),
     ...accommodations.map((a) => a.location),
   ]
   const locNames: string[] = [
     '起點',
+    '終點',
     ...attractions.map((a) => a.name.slice(0, 5) || `景${attractions.indexOf(a)}`),
     ...restaurants.map((r) => r.name.slice(0, 5) || `餐${restaurants.indexOf(r)}`),
     ...accommodations.map((a) => `宿${a.dayIndex}`),
@@ -143,9 +315,11 @@ export async function optimizeWithClaude(
   const jsonStr = extractJsonArray(clean)
   if (!jsonStr) throw new Error('Claude 未回傳有效 JSON')
 
-  const itinerary = JSON.parse(jsonStr) as DayItinerary[]
-  return itinerary.map((day) => ({
+  const raw = JSON.parse(jsonStr) as DayItinerary[]
+  const itinerary = raw.map((day) => ({
     ...day,
     stops: day.stops.map((stop) => ({ ...stop, id: stop.id || uuidv4() })),
   }))
+
+  return validateAndDedup(itinerary, attractions, restaurants)
 }

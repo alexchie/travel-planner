@@ -75,6 +75,7 @@ export interface Stop {
   hasWarning: boolean
   warningMessage?: string
   mealType?: MealType
+  isAiRecommended?: boolean
 }
 
 export interface DayItinerary {
@@ -109,8 +110,8 @@ export const MEAL_TYPE_LABEL: Record<MealType, string> = {
 }
 
 export const TRANSPORT_LABEL: Record<TransportMode, string> = {
-  motorcycle: '機車',
   car: '汽車',
+  motorcycle: '機車',
   bicycle: '腳踏車',
   ubike: 'Ubike',
   walking: '走路',

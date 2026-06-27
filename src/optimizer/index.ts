@@ -18,6 +18,8 @@ const MEAL_WINDOWS: Record<Exclude<MealType, 'any'>, { start: number; end: numbe
   afternoon_tea: { start: 14 * 60 + 30, end: 17 * 60 },
 }
 
+const CURFEW = 22 * 60 + 30
+
 function minutesToTime(minutes: number): string {
   const h = Math.floor(minutes / 60) % 24
   const m = minutes % 60
@@ -149,7 +151,9 @@ export function optimize(
     const dayKey = getDateDayKey(date)
 
     const accom = accommodations.find((a) => a.dayIndex === dayNum)
-    const startLoc = dayIdx === 0 ? trip.startLocation : accommodations.find((a) => a.dayIndex === dayNum - 1)?.location ?? trip.startLocation
+    const startLoc = dayIdx === 0
+      ? trip.startLocation
+      : accommodations.find((a) => a.dayIndex === dayNum - 1)?.location ?? trip.startLocation
     const endLoc = accom?.location ?? trip.endLocation
 
     const dayItems = items.filter((item) => {
@@ -157,11 +161,9 @@ export function optimize(
       return true
     })
 
-    // Separate fixed-time items and flexible items
     const fixedItems = dayItems.filter((i) => i.fixedStartMinutes !== undefined)
     const flexItems = dayItems.filter((i) => i.fixedStartMinutes === undefined)
 
-    // Build schedule as ordered stops
     interface Slot {
       item: ScheduleItem
       startMin: number
@@ -171,22 +173,17 @@ export function optimize(
       startMin: i.fixedStartMinutes!,
     }))
 
-    // Start time (based on trip arrival or 9am)
+    // Start time: arrival time on day 1, 9:00 on subsequent days
     let cursor = dayIdx === 0 ? timeToMinutes(trip.arrivalDatetime.slice(11, 16)) : 9 * 60
 
-    // Sort slots by time
     slots.sort((a, b) => a.startMin - b.startMin)
 
-    // Greedily insert flexible items
     let currentLoc = startLoc
     const scheduled: Slot[] = [...slots]
     const unscheduled = flexItems.filter((i) => !slots.find((s) => s.item.id === i.id))
 
-    // Try to fit meal slots in appropriate windows
     const mealItems = unscheduled.filter((i) => i.mealType && i.mealType in MEAL_WINDOWS)
     const nonMealItems = unscheduled.filter((i) => !i.mealType || !(i.mealType in MEAL_WINDOWS))
-
-    const CURFEW = 22 * 60 + 30
 
     const toInsert = [...nonMealItems]
     for (const meal of mealItems) {
@@ -200,7 +197,6 @@ export function optimize(
       cursor = mealEnd
     }
 
-    // Greedy insert non-meal attractions
     let positions = [...scheduled]
     for (const item of toInsert) {
       const travel = travelMinutes(currentLoc, item.location, mode)
@@ -215,10 +211,8 @@ export function optimize(
       currentLoc = item.location
     }
 
-    // Sort by start time
     positions.sort((a, b) => a.startMin - b.startMin)
 
-    // 2-opt on the non-fixed items
     const fixedSet = new Set(fixedItems.map((i) => i.id))
     const flexPositions = positions.filter((p) => !fixedSet.has(p.item.id))
     if (flexPositions.length > 3) {
@@ -233,12 +227,10 @@ export function optimize(
       ].sort((a, b) => a.startMin - b.startMin)
     }
 
-    // Build stops with actual times
     const stops: Stop[] = []
     let prevLoc = startLoc
     let time = dayIdx === 0 ? timeToMinutes(trip.arrivalDatetime.slice(11, 16)) : 9 * 60
 
-    // Add start accommodation/location as first stop if day > 1
     if (dayIdx > 0 && accom) {
       const prevAccom = accommodations.find((a) => a.dayIndex === dayNum - 1)
       if (prevAccom) {
@@ -266,7 +258,6 @@ export function optimize(
       const arrival = time + travel
       const departure = arrival + item.durationMinutes
 
-      // Check if open
       const dayHours = item.openHours[dayKey]
       let itemWarning = false
       let warningMsg = ''
@@ -280,7 +271,7 @@ export function optimize(
         }
       } else {
         itemWarning = true
-        warningMsg = `${['週日', '週一', '週二', '週三', '週四', '週五', '週六'][new Date(date).getDay()]}休息`
+        warningMsg = `${'週日週一週二週三週四週五週六'.match(/../g)![new Date(date).getDay()]}休息`
         hasWarning = true
       }
 
@@ -308,7 +299,6 @@ export function optimize(
       prevLoc = item.location
     }
 
-    // Add final accommodation
     if (accom) {
       const travel = travelMinutes(prevLoc, accom.location, mode)
       totalTravel += travel
@@ -325,7 +315,6 @@ export function optimize(
       })
     }
 
-    // Remove items already scheduled on this day from future days' candidate pool
     for (const pos of positions) {
       const idx = items.findIndex((i) => i.id === pos.item.id)
       if (idx !== -1 && items[idx].fixedDay === undefined) {
@@ -342,7 +331,6 @@ export function optimize(
     })
   }
 
-  // Recompute stops with correct travelTimeToNext using totalRouteTime fix
   void totalRouteTime
 
   return result
@@ -361,7 +349,6 @@ export function reorderDay(
     const [moved] = stops.splice(fromIdx, 1)
     stops.splice(toIdx, 0, moved)
 
-    // Recalculate travel times
     let totalTravel = 0
     const recalc: Stop[] = stops.map((stop, i) => {
       const next = stops[i + 1]
@@ -370,7 +357,6 @@ export function reorderDay(
       return { ...stop, travelTimeToNext }
     })
 
-    // Check constraint warnings
     const hasConstraintWarning = recalc.some((s) => s.hasWarning)
 
     return {

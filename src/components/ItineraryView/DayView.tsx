@@ -29,6 +29,12 @@ const TYPE_LABEL: Record<string, string> = {
   accommodation: '住宿',
 }
 
+function stopCardClass(stop: Stop): string {
+  if (stop.hasWarning) return 'border-orange-200 bg-orange-50'
+  if (stop.isAiRecommended) return 'border-teal-200 bg-teal-50'
+  return 'border-gray-100 bg-white'
+}
+
 function StopCard({
   stop,
   index,
@@ -52,24 +58,20 @@ function StopCard({
 
   return (
     <div ref={setNodeRef} style={style} className="relative">
-      <div
-        className={`flex gap-3 p-3 rounded-lg border ${
-          stop.hasWarning ? 'border-orange-200 bg-orange-50' : 'border-gray-100 bg-white'
-        } shadow-sm`}
-      >
+      <div className={`flex gap-3 p-3 rounded-lg border ${stopCardClass(stop)} shadow-sm`}>
         {isEditing && stop.type !== 'accommodation' && (
           <div
             {...attributes}
             {...listeners}
             className="drag-handle flex items-center text-gray-300 hover:text-gray-500 px-1"
           >
-            ⠿
+            ⠇
           </div>
         )}
 
         <div className="flex-shrink-0 flex flex-col items-center gap-1">
           <div
-            className={`w-7 h-7 rounded-full ${TYPE_COLOR[stop.type]} flex items-center justify-center text-white text-xs font-bold`}
+            className={`w-7 h-7 rounded-full ${stop.isAiRecommended ? 'bg-teal-500' : TYPE_COLOR[stop.type]} flex items-center justify-center text-white text-xs font-bold`}
           >
             {index + 1}
           </div>
@@ -88,12 +90,19 @@ function StopCard({
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="font-medium text-sm text-gray-900">{stop.name}</span>
                 <span className={`text-xs px-1.5 py-0.5 rounded ${
-                  stop.type === 'attraction' ? 'bg-blue-100 text-blue-700' :
-                  stop.type === 'restaurant' ? 'bg-amber-100 text-amber-700' :
-                  'bg-gray-100 text-gray-600'
+                  stop.isAiRecommended
+                    ? 'bg-teal-100 text-teal-700'
+                    : stop.type === 'attraction' ? 'bg-blue-100 text-blue-700'
+                    : stop.type === 'restaurant' ? 'bg-amber-100 text-amber-700'
+                    : 'bg-gray-100 text-gray-600'
                 }`}>
                   {stop.mealType ? MEAL_TYPE_LABEL[stop.mealType] : TYPE_LABEL[stop.type]}
                 </span>
+                {stop.isAiRecommended && (
+                  <span className="text-xs bg-teal-100 text-teal-600 px-1.5 py-0.5 rounded font-medium">
+                    AI 推薦
+                  </span>
+                )}
               </div>
               <div className="text-xs text-gray-500 mt-0.5">
                 {stop.arrivalTime} – {stop.departureTime}
@@ -132,7 +141,7 @@ interface Props {
 }
 
 export default function DayView({ day, dayIdx, isEditing, onReorder, onAddStop, onRemoveStop }: Props) {
-  const [showMap, setShowMap] = useState(false)
+  const [showMap, setShowMap] = useState(true)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   function handleDragEnd(event: DragEndEvent) {

@@ -31,6 +31,7 @@ type Action =
   | { type: 'SET_RESULT'; original: DayItinerary[]; conflicts: Conflict[] }
   | { type: 'ENTER_EDIT' }
   | { type: 'EXIT_EDIT' }
+  | { type: 'SAVE_EDIT' }
   | { type: 'RESET_EDIT' }
   | { type: 'UPDATE_EDITED'; itinerary: DayItinerary[] }
   | { type: 'SET_LOADING'; loading: boolean }
@@ -81,7 +82,14 @@ function reducer(state: AppState, action: Action): AppState {
         editedItinerary: JSON.parse(JSON.stringify(state.originalItinerary)),
       }
     case 'EXIT_EDIT':
-      return { ...state, isEditing: false }
+      return { ...state, isEditing: false, editedItinerary: null }
+    case 'SAVE_EDIT':
+      return {
+        ...state,
+        isEditing: false,
+        originalItinerary: state.editedItinerary ?? state.originalItinerary,
+        editedItinerary: null,
+      }
     case 'RESET_EDIT':
       return {
         ...state,

@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react'
 import {
   APIProvider,
   Map,
-  Marker,
   useMap,
   useMapsLibrary,
 } from '@vis.gl/react-google-maps'
@@ -18,6 +17,39 @@ const TRAVEL_MODE_MAP: Record<string, string> = {
   ubike: 'BICYCLING',
   walking: 'WALKING',
   transit: 'TRANSIT',
+}
+
+const TYPE_COLOR: Record<string, string> = {
+  attraction: '#3b82f6',
+  restaurant: '#f59e0b',
+  accommodation: '#6b7280',
+}
+
+function MarkersLayer({ stops }: { stops: Stop[] }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!map) return
+    const markers = stops.map((stop, i) =>
+      new google.maps.Marker({
+        position: { lat: stop.location.lat, lng: stop.location.lng },
+        map,
+        label: { text: String(i + 1), color: 'white', fontWeight: 'bold', fontSize: '12px' },
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 14,
+          fillColor: TYPE_COLOR[stop.type] ?? '#3b82f6',
+          fillOpacity: 1,
+          strokeColor: 'white',
+          strokeWeight: 2,
+        },
+        title: `${i + 1}. ${stop.name} (${stop.arrivalTime})`,
+      })
+    )
+    return () => { markers.forEach((m) => m.setMap(null)) }
+  }, [map, stops])
+
+  return null
 }
 
 function RouteLayer({ stops, transportMode }: { stops: Stop[]; transportMode: string }) {
@@ -41,7 +73,10 @@ function RouteLayer({ stops, transportMode }: { stops: Stop[]; transportMode: st
     service.route(
       {
         origin: { lat: valid[0].location.lat, lng: valid[0].location.lng },
-        destination: { lat: valid[valid.length - 1].location.lat, lng: valid[valid.length - 1].location.lng },
+        destination: {
+          lat: valid[valid.length - 1].location.lat,
+          lng: valid[valid.length - 1].location.lng,
+        },
         waypoints: valid.slice(1, -1).slice(0, 23).map((s) => ({
           location: { lat: s.location.lat, lng: s.location.lng },
           stopover: true,
@@ -97,14 +132,7 @@ export default function MapView({ day }: Props) {
         defaultZoom={12}
         gestureHandling="greedy"
       >
-        {validStops.map((stop, i) => (
-          <Marker
-            key={stop.id}
-            position={{ lat: stop.location.lat, lng: stop.location.lng }}
-            label={{ text: String(i + 1), color: 'white', fontWeight: 'bold', fontSize: '13px' }}
-            title={`${i + 1}. ${stop.name} (${stop.arrivalTime})`}
-          />
-        ))}
+        <MarkersLayer stops={validStops} />
         <RouteLayer stops={validStops} transportMode={transportMode} />
       </Map>
     </APIProvider>

@@ -10,7 +10,6 @@ const EMPTY_GEO: GeoPoint = { lat: 0, lng: 0, address: '' }
 export default function Step1TripInfo() {
   const { trip } = useAppState()
   const dispatch = useDispatch()
-
   const [form, setForm] = useState<TripInfo>(
     trip ?? {
       arrivalDatetime: '',
@@ -20,20 +19,7 @@ export default function Step1TripInfo() {
       transportMode: 'car',
     }
   )
-
   const [sameAsStart, setSameAsStart] = useState(false)
-
-  function handleEndLoc(loc: GeoPoint) {
-    setForm((f) => ({ ...f, endLocation: loc }))
-  }
-
-  function handleStartLoc(loc: GeoPoint) {
-    setForm((f) => ({
-      ...f,
-      startLocation: loc,
-      ...(sameAsStart ? { endLocation: loc } : {}),
-    }))
-  }
 
   function isValid() {
     return (
@@ -53,7 +39,6 @@ export default function Step1TripInfo() {
   return (
     <div className="card step-enter space-y-5 max-w-2xl mx-auto">
       <h2 className="section-title">行程基本資訊</h2>
-
       <div className="grid grid-cols-2 gap-4">
         <DateTimePicker24
           label="抵達時間"
@@ -66,14 +51,12 @@ export default function Step1TripInfo() {
           onChange={(v) => setForm((f) => ({ ...f, departureDatetime: v }))}
         />
       </div>
-
       {form.arrivalDatetime && form.departureDatetime && form.arrivalDatetime > form.departureDatetime && (
-        <p className="text-sm text-red-500">離開時間必須晚於抵達時間</p>
+        <p className="text-sm text-red-500">離開時間必須晩於抵達時間</p>
       )}
-
       <div>
         <label className="label">交通方式</label>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           {(Object.entries(TRANSPORT_LABEL) as [TransportMode, string][]).map(([k, v]) => (
             <label key={k} className="flex items-center gap-2 cursor-pointer">
               <input
@@ -89,44 +72,19 @@ export default function Step1TripInfo() {
           ))}
         </div>
       </div>
-
-      <GeoInput
-        label="行程起點"
-        value={form.startLocation}
-        onChange={handleStartLoc}
-      />
-
+      <GeoInput label="行程起點" value={form.startLocation} onChange={(loc) => setForm((f) => ({ ...f, startLocation: loc, ...(sameAsStart ? { endLocation: loc } : {}) }))} />
       <div>
         <div className="flex items-center justify-between mb-1">
           <label className="label mb-0">行程終點</label>
           <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={sameAsStart}
-              onChange={(e) => {
-                setSameAsStart(e.target.checked)
-                if (e.target.checked) {
-                  setForm((f) => ({ ...f, endLocation: f.startLocation }))
-                }
-              }}
-              className="accent-blue-600"
-            />
+            <input type="checkbox" checked={sameAsStart} onChange={(e) => { setSameAsStart(e.target.checked); if (e.target.checked) setForm((f) => ({ ...f, endLocation: f.startLocation })) }} className="accent-blue-600" />
             與起點相同
           </label>
         </div>
-        {!sameAsStart && (
-          <GeoInput
-            label=""
-            value={form.endLocation}
-            onChange={handleEndLoc}
-          />
-        )}
+        {!sameAsStart && <GeoInput label="" value={form.endLocation} onChange={(loc) => setForm((f) => ({ ...f, endLocation: loc }))} />}
       </div>
-
       <div className="flex justify-end">
-        <button onClick={next} disabled={!isValid()} className="btn-primary">
-          下一步
-        </button>
+        <button onClick={next} disabled={!isValid()} className="btn-primary">下一步</button>
       </div>
     </div>
   )

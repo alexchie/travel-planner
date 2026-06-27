@@ -67,7 +67,7 @@ export function parseOsmOpeningHours(osmStr: string): OpenHours | null {
   let matched = false
 
   for (const rule of rules) {
-    const m = rule.match(/^([A-Za-z,\-]+)\s*([\d:]+\s*-\s*[\d:]+|off|closed)?$/i)
+    const m = rule.match(/^([A-Za-z,\-]+)\s*([\d:]+ *- *[\d:]+|off|closed)?$/i)
     if (!m) continue
     const days = expandDayStr(m[1])
     const timeStr = (m[2] ?? '').trim().toLowerCase()
@@ -76,7 +76,7 @@ export function parseOsmOpeningHours(osmStr: string): OpenHours | null {
       if (!timeStr || timeStr === 'off' || timeStr === 'closed') {
         result[day] = null
       } else {
-        const tm = timeStr.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/)
+        const tm = timeStr.match(/(\d{1,2}:\d{2}) *- *(\d{1,2}:\d{2})/)
         if (tm) {
           result[day] = { open: padTime(tm[1]), close: padTime(tm[2]) }
         }
