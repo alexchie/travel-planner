@@ -7,10 +7,70 @@ interface GooglePeriod {
 
 const GOOGLE_DAY_TO_KEY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
 
+// weekdayDescriptions 順序：Mon=0 … Sun=6
+const WD_TO_KEY = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
+
+function to24h(time: string, ampm: string): string {
+  let [h, m] = time.split(':').map(Number)
+  if (ampm.toUpperCase() === 'PM' && h !== 12) h += 12
+  if (ampm.toUpperCase() === 'AM' && h === 12) h = 0
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+/**
+ * 解析 Google Places API 回傳的 weekdayDescriptions（最可靠來源）
+ * 陣列長度固定為 7，順序 Mon~Sun
+ * 範例：["星期一: 05:00–00:00", "星期二: 24 小時", ..., "星期日: 00:00–05:00"]
+ */
+export function parseWeekdayDescriptions(descriptions: string[]): OpenHours | null {
+  const result: OpenHours = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null }
+  let matched = 0
+
+  for (let i = 0; i < Math.min(descriptions.length, 7); i++) {
+    const dayKey = WD_TO_KEY[i] as keyof OpenHours
+    // 去掉「星期X: 」或「Monday: 」前綴
+    const content = descriptions[i].replace(/^[^:：]+[:：]\s*/, '').trim()
+
+    // 24 小時（中文或英文）
+    if (/24\s*小時|open\s+24\s+hours/i.test(content)) {
+      result[dayKey] = { open: '00:00', close: '23:59' }
+      matched++
+      continue
+    }
+
+    // 公休 / 休息
+    if (/^(休息|公休|關閉|closed)$/i.test(content)) {
+      result[dayKey] = null
+      matched++
+      continue
+    }
+
+    // 中文格式 HH:MM–HH:MM（可能有多段，取首開到末關）
+    const zhRanges = [...content.matchAll(/(\d{1,2}:\d{2})\s*[–—\-]\s*(\d{1,2}:\d{2})/g)]
+    if (zhRanges.length > 0) {
+      const open = zhRanges[0][1].padStart(5, '0')
+      const close = zhRanges[zhRanges.length - 1][2].padStart(5, '0')
+      result[dayKey] = { open, close }
+      matched++
+      continue
+    }
+
+    // 英文格式 5:00 AM – 12:00 AM（可能有多段）
+    const enRanges = [...content.matchAll(/(\d{1,2}:\d{2})\s*(AM|PM)\s*[–—\-]\s*(\d{1,2}:\d{2})\s*(AM|PM)/gi)]
+    if (enRanges.length > 0) {
+      const open = to24h(enRanges[0][1], enRanges[0][2])
+      const close = to24h(enRanges[enRanges.length - 1][3], enRanges[enRanges.length - 1][4])
+      result[dayKey] = { open, close }
+      matched++
+    }
+  }
+
+  return matched > 0 ? result : null
+}
+
 export function parseGoogleOpenHours(periods: GooglePeriod[]): OpenHours {
   const result: OpenHours = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null }
 
-  // Google 以單一無 close 的 period 表示完全 24/7
   if (periods.length === 1 && periods[0].open?.day === 0 && !periods[0].close) {
     const h = { open: '00:00', close: '23:59' }
     return { mon: h, tue: h, wed: h, thu: h, fri: h, sat: h, sun: h }
@@ -22,10 +82,12 @@ export function parseGoogleOpenHours(periods: GooglePeriod[]): OpenHours {
     const openStr = `${String(p.open.hour ?? 0).padStart(2, '0')}:${String(p.open.minute ?? 0).padStart(2, '0')}`
 
     if (p.close?.day == null) {
-      // close 欄位不存在 = 當天 24 小時營業
       result[dayKey] = { open: '00:00', close: '23:59' }
     } else {
-      const closeStr = `${String(p.close.hour ?? 0).padStart(2, '0')}:${String(p.close.minute ?? 0).padStart(2, '0')}`
+      const closeH = p.close.hour ?? 0
+      const closeStr = closeH >= 24
+        ? `${String(closeH - 24).padStart(2, '0')}:${String(p.close.minute ?? 0).padStart(2, '0')}`
+        : `${String(closeH).padStart(2, '0')}:${String(p.close.minute ?? 0).padStart(2, '0')}`
       result[dayKey] = { open: openStr, close: closeStr }
     }
   }
