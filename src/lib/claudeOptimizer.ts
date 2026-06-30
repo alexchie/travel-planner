@@ -103,7 +103,7 @@ function validateAndDedup(
             s = { ...s, hasWarning: true, warningMessage: `週${dowLabel}公休，請調整日期` }
           } else {
             const open = timeToMinutes(dh.open)
-            const close = timeToMinutes(dh.close)
+            const close = effectiveCloseMin(dh.open, dh.close)
             const arrival = timeToMinutes(s.arrivalTime)
             const departure = timeToMinutes(s.departureTime)
             if (arrival < open || departure > close) {
