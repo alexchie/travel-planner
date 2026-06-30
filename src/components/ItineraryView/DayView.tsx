@@ -262,24 +262,19 @@ export default function DayView({ day, dayIdx, isEditing, onReorder, onAddStop, 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500">
-            總交通時間：
-            <strong className="text-gray-800">
-              {hours > 0 ? `${hours} 小時 ` : ''}{mins} 分鐘
-            </strong>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-slate-500">
+            交通時間：<strong className="text-slate-700">{hours > 0 ? `${hours}h ` : ''}{mins}min</strong>
           </span>
           {day.hasConstraintWarning && (
-            <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
-              ⚠ 有時間衝突
-            </span>
+            <span className="badge bg-orange-50 text-orange-500 border border-orange-200">⚠ 時間衝突</span>
           )}
         </div>
         <button
           onClick={() => setShowMap((v) => !v)}
-          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          className="btn-ghost text-xs py-1"
         >
-          {showMap ? '隱藏地圖' : '顯示地圖'}
+          {showMap ? '收起地圖' : '顯示地圖'}
         </button>
       </div>
 
