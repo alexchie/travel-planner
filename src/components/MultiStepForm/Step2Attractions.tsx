@@ -181,15 +181,14 @@ export default function Step2Attractions() {
                       </div>
                       <div>
                         <label className="label">開始</label>
-                        <input
-                          type="time"
+                        <TimeInput24
                           className="input"
                           value={attr.timeWindowRequired.startTime}
-                          onChange={(e) =>
+                          onChange={(v) =>
                             update(attr.id, {
                               timeWindowRequired: {
                                 ...attr.timeWindowRequired!,
-                                startTime: e.target.value,
+                                startTime: v,
                               },
                             })
                           }
@@ -197,15 +196,14 @@ export default function Step2Attractions() {
                       </div>
                       <div>
                         <label className="label">結束</label>
-                        <input
-                          type="time"
+                        <TimeInput24
                           className="input"
                           value={attr.timeWindowRequired.endTime}
-                          onChange={(e) =>
+                          onChange={(v) =>
                             update(attr.id, {
                               timeWindowRequired: {
                                 ...attr.timeWindowRequired!,
-                                endTime: e.target.value,
+                                endTime: v,
                               },
                             })
                           }
