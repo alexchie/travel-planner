@@ -120,17 +120,30 @@ function StopCard({
   const showFallbackWarning = !hasOpenHoursData && stop.hasWarning && !!stop.warningMessage
   const hasAlert = hasConflict || showFallbackWarning
 
+  const isStart = stop.type === 'accommodation' && stop.name.startsWith('起點')
+  const isEnd = stop.type === 'accommodation' && stop.name.startsWith('終點')
+  const isWaypoint = isStart || isEnd
+
   const borderClass = hasAlert
     ? 'border-l-orange-400'
     : stop.isAiRecommended
     ? 'border-l-teal-400'
+    : isWaypoint ? 'border-l-slate-400'
     : TYPE_BORDER[stop.type]
 
-  const dotClass = stop.isAiRecommended ? 'bg-teal-500' : TYPE_DOT[stop.type]
+  const dotClass = stop.isAiRecommended ? 'bg-teal-500'
+    : isWaypoint ? 'bg-slate-400'
+    : TYPE_DOT[stop.type]
 
-  const badgeClass = stop.isAiRecommended
-    ? 'badge-teal'
+  const badgeClass = stop.isAiRecommended ? 'badge-teal'
+    : isWaypoint ? 'badge-gray'
     : TYPE_BADGE[stop.type]
+
+  const stopLabel = stop.mealType
+    ? MEAL_TYPE_LABEL[stop.mealType]
+    : isStart ? '起點'
+    : isEnd ? '終點'
+    : TYPE_LABEL[stop.type]
 
   return (
     <div ref={setNodeRef} style={style}>
