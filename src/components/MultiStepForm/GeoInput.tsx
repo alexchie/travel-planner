@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import type { GeoPoint, OpenHours } from '../../types'
 import { DAY_KEYS, DAY_LABELS } from '../../types'
-import { parseOsmOpeningHours, parseGoogleOpenHours } from '../../utils/parseOpenHours'
+import { parseOsmOpeningHours, parseGoogleOpenHours, parseWeekdayDescriptions } from '../../utils/parseOpenHours'
 
 const ALL_OPEN: OpenHours = {
   mon: { open: '00:00', close: '23:59' }, tue: { open: '00:00', close: '23:59' },
