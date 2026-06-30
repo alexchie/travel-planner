@@ -7,9 +7,10 @@ import type {
   DayItinerary,
   Conflict,
 } from './types'
+import type { StoredSession } from './lib/history'
 
 interface AppState {
-  page: 'form' | 'result'
+  page: 'home' | 'form' | 'result'
   currentStep: number
   trip: TripInfo | null
   attractions: Attraction[]
