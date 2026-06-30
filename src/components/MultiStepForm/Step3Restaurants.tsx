@@ -218,7 +218,7 @@ export default function Step3Restaurants() {
                     value={r.openHours}
                     onChange={(h) => update(r.id, { openHours: h })}
                   />
-                </details>
+                </div>
               </div>
             )}
           </div>
