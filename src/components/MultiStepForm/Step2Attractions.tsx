@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { useDispatch, useAppState } from '../../store'
 import type { Attraction, GeoPoint, Priority } from '../../types'
@@ -6,6 +6,7 @@ import { defaultOpenHours } from '../../types'
 import GeoInput from './GeoInput'
 import OpenHoursEditor from './OpenHoursEditor'
 import TimeInput24 from './TimeInput24'
+import { listPlaceHistory } from '../../lib/history'
 
 const EMPTY_GEO: GeoPoint = { lat: 0, lng: 0, address: '' }
 
