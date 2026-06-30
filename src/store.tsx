@@ -39,6 +39,9 @@ type Action =
   | { type: 'SET_LOADING'; loading: boolean }
   | { type: 'GO_TO_FORM' }
   | { type: 'GO_TO_RESULT' }
+  | { type: 'GO_TO_HOME' }
+  | { type: 'NEW_TRIP' }
+  | { type: 'LOAD_SESSION'; session: StoredSession }
   | { type: 'ADD_STOP'; dayIndex: number; stop: import('./types').Stop }
   | { type: 'REMOVE_STOP'; dayIndex: number; stopId: string }
 
