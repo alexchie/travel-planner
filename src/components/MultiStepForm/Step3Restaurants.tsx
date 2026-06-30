@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { useDispatch, useAppState } from '../../store'
 import type { Restaurant, GeoPoint, MealType, MealAssignmentMode, DishType, Priority } from '../../types'
 import { MEAL_TYPE_LABEL, SNACK_REQUIRED, defaultOpenHours } from '../../types'
 import GeoInput from './GeoInput'
 import OpenHoursEditor from './OpenHoursEditor'
+import { listPlaceHistory } from '../../lib/history'
 
 const EMPTY_GEO: GeoPoint = { lat: 0, lng: 0, address: '' }
 
