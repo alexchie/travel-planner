@@ -76,6 +76,7 @@ function reducer(state: AppState, action: Action): AppState {
         conflicts: action.conflicts,
         page: action.conflicts.length === 0 ? 'result' : 'form',
         loading: false,
+        aiError: action.aiError ?? null,
       }
     case 'ENTER_EDIT':
       return {
