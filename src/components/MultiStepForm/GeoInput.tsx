@@ -63,8 +63,17 @@ async function fetchGoogleHours(placeId: string): Promise<OpenHours | null> {
     headers: { 'X-Goog-Api-Key': GOOGLE_KEY!, 'X-Goog-FieldMask': 'regularOpeningHours' },
   })
   const data = await res.json()
-  const periods = data.regularOpeningHours?.periods
-  return periods?.length ? parseGoogleOpenHours(periods) : null
+  const roh = data.regularOpeningHours
+  if (!roh) return null
+
+  // weekdayDescriptions 是 Google 直接顯示給用戶的文字，最可靠
+  if (Array.isArray(roh.weekdayDescriptions) && roh.weekdayDescriptions.length === 7) {
+    const hours = parseWeekdayDescriptions(roh.weekdayDescriptions)
+    if (hours) return hours
+  }
+
+  // fallback：解析 periods 結構
+  return roh.periods?.length ? parseGoogleOpenHours(roh.periods) : null
 }
 
 async function searchNominatim(q: string, countryCode?: string): Promise<PlaceResult[]> {
