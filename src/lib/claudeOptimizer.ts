@@ -205,10 +205,17 @@ function buildPrompt(
   lines.push('- travelTimeToNext 填入到下一個地點的交通分鐘（最後一個 stop 填 0）')
 
   lines.push('')
-  lines.push('【規則—營業時間（嚴格遵守）】')
+  lines.push('【規則—不得重複（嚴格遵守）】')
+  lines.push('- 同一家餐廳或景點在整個行程中只能出現一次，無論是哪一天')
+  lines.push('- 若用戶提供的餐廳已全數排完，但某餐別仍無對應正餐，必須以 isAiRecommended: true 推薦一家附近合適的新餐廳，絕對不得重複使用已出現過的餐廳')
+
+  lines.push('')
+  lines.push('【規則—營業時間（嚴格遵守，違反即視為無效行程）】')
   lines.push('- 每個地點的 arrivalTime 必須 >= 該天營業開始時間')
   lines.push('- 每個地點的 departureTime (= arrivalTime + durationMinutes) 必須 <= 該天營業結束時間')
-  lines.push('- 若地點在該天標註為「休」，絕對不得安排在那一天，必須改安排到其他天')
+  lines.push('- 若地點在該天標註為「休」，絕對不得安排在那一天，必須改安排到其他天或省略')
+  lines.push('- 最終輸出的每一個 stop 都必須是用戶實際可以前往的，不得出現任何違反營業時間的安排')
+  lines.push('- 若無法在合法時段內安排某地點，寧可省略該地點，也不可排入違規時段')
 
   lines.push('')
   lines.push('【規則—餐食（嚴格遵守）】')
@@ -220,6 +227,8 @@ function buildPrompt(
   lines.push('  - 晚餐：18:00–21:00（arrivalTime 必須在此區間內）')
   lines.push('  - 下午茶：14:00–18:00（可選，限小吃，最多 1~2 個）')
   lines.push('  - 宵夜：21:00–00:00（可選，限小吃，最多 1~2 個）')
+  lines.push('【餐廳不足時的處理】')
+  lines.push('- 若用戶提供的餐廳已全部排完，仍有未填滿的早/午/晚餐時段，必須推薦新餐廳（isAiRecommended: true），不得重複使用已排入的餐廳')
   lines.push('【其他限制】')
   lines.push('- 每天每個必要餐別（早/午/晚）各最多 1 個正餐，絕對不能同一天出現兩個午餐正餐')
   lines.push('- 小吃（snack）不佔正餐名額，可在景點之間額外插入')
