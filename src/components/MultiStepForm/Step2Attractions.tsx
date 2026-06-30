@@ -5,6 +5,7 @@ import type { Attraction, GeoPoint, Priority } from '../../types'
 import { defaultOpenHours } from '../../types'
 import GeoInput from './GeoInput'
 import OpenHoursEditor from './OpenHoursEditor'
+import TimeInput24 from './TimeInput24'
 
 const EMPTY_GEO: GeoPoint = { lat: 0, lng: 0, address: '' }
 
