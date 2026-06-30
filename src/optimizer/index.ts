@@ -12,10 +12,10 @@ import { travelMinutes } from './distance'
 import { v4 as uuidv4 } from 'uuid'
 
 const MEAL_WINDOWS: Record<Exclude<MealType, 'any'>, { start: number; end: number }> = {
-  breakfast: { start: 7 * 60, end: 10 * 60 },
-  lunch: { start: 11 * 60 + 30, end: 14 * 60 },
-  dinner: { start: 17 * 60 + 30, end: 21 * 60 },
-  afternoon_tea: { start: 14 * 60 + 30, end: 17 * 60 },
+  breakfast: { start: 8 * 60, end: 10 * 60 + 30 },
+  lunch: { start: 11 * 60, end: 14 * 60 },
+  dinner: { start: 18 * 60, end: 21 * 60 },
+  afternoon_tea: { start: 14 * 60, end: 18 * 60 },
   supper: { start: 21 * 60, end: 24 * 60 },
 }
 
