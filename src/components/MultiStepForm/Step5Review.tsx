@@ -32,7 +32,8 @@ export default function Step5Review() {
         try {
           itinerary = await optimizeWithClaude(trip, attractions, restaurants, accommodations)
         } catch (e) {
-          console.warn('Claude fallback:', e)
+          const reason = e instanceof Error ? e.message : String(e)
+          setErrorMsg(`AI 規劃失敗（${reason}），已改用本地演算法排程`)
           itinerary = optimize(trip, attractions, restaurants, accommodations)
         }
       } else {
