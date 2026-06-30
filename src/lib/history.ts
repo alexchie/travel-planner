@@ -73,6 +73,11 @@ export function savePlaces(places: PlaceHistory[]): void {
   localStorage.setItem(PLACES_KEY, JSON.stringify(sorted))
 }
 
+export function listPlaceHistory(placeType?: 'attraction' | 'restaurant'): PlaceHistory[] {
+  const all = readJSON<PlaceHistory[]>(PLACES_KEY, [])
+  return placeType ? all.filter(p => p.placeType === placeType) : all
+}
+
 export function searchPlaceHistory(query: string): PlaceHistory[] {
   if (!query.trim()) return []
   const q = query.trim().toLowerCase()
