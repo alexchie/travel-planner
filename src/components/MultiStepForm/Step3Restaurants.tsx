@@ -41,6 +41,23 @@ export default function Step3Restaurants() {
     setExpanded(r.id)
   }
 
+  function addFromHistory(h: ReturnType<typeof listPlaceHistory>[number]) {
+    if (list.some(r => r.name.trim() === h.name.trim())) return
+    const r: Restaurant = {
+      id: uuidv4(),
+      name: h.name,
+      location: h.location,
+      openHours: h.openHours,
+      mealType: 'any',
+      mealAssignmentMode: 'flexible',
+      assignedDay: null,
+      dishType: 'full_meal',
+      priority: 'must',
+    }
+    setList(l => [...l, r])
+    setExpanded(r.id)
+  }
+
   function remove(id: string) {
     setList((l) => l.filter((r) => r.id !== id))
   }
