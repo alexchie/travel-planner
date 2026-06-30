@@ -119,6 +119,11 @@ export default function ItineraryView() {
 
   return (
     <div className="space-y-4">
+      {state.aiError && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 text-sm text-yellow-800">
+          AI 規劃失敗，已改用本地演算法排程。原因：{state.aiError}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
