@@ -126,6 +126,7 @@ export default function GeoInput({ value, onChange, onOpenHours, onNameChange, n
     value.address ? value.address.split(',')[0].trim() : ''
   )
   const [results, setResults] = useState<PlaceResult[]>([])
+  const [historyResults, setHistoryResults] = useState<PlaceHistory[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
