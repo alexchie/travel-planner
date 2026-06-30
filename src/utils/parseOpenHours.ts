@@ -2,20 +2,34 @@ import type { OpenHours } from '../types'
 
 interface GooglePeriod {
   open: { day: number; hour: number; minute: number }
-  close: { day: number; hour: number; minute: number }
+  close?: { day: number; hour: number; minute: number } | null
 }
 
 const GOOGLE_DAY_TO_KEY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
 
 export function parseGoogleOpenHours(periods: GooglePeriod[]): OpenHours {
   const result: OpenHours = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null }
-  for (const p of periods) {
-    if (p.open?.day == null || p.close?.day == null) continue
-    const dayKey = GOOGLE_DAY_TO_KEY[p.open.day] as keyof OpenHours
-    const open = `${String(p.open.hour ?? 0).padStart(2, '0')}:${String(p.open.minute ?? 0).padStart(2, '0')}`
-    const close = `${String(p.close.hour ?? 0).padStart(2, '0')}:${String(p.close.minute ?? 0).padStart(2, '0')}`
-    result[dayKey] = { open, close }
+
+  // Google 以單一無 close 的 period 表示完全 24/7
+  if (periods.length === 1 && periods[0].open?.day === 0 && !periods[0].close) {
+    const h = { open: '00:00', close: '23:59' }
+    return { mon: h, tue: h, wed: h, thu: h, fri: h, sat: h, sun: h }
   }
+
+  for (const p of periods) {
+    if (p.open?.day == null) continue
+    const dayKey = GOOGLE_DAY_TO_KEY[p.open.day] as keyof OpenHours
+    const openStr = `${String(p.open.hour ?? 0).padStart(2, '0')}:${String(p.open.minute ?? 0).padStart(2, '0')}`
+
+    if (p.close?.day == null) {
+      // close 欄位不存在 = 當天 24 小時營業
+      result[dayKey] = { open: '00:00', close: '23:59' }
+    } else {
+      const closeStr = `${String(p.close.hour ?? 0).padStart(2, '0')}:${String(p.close.minute ?? 0).padStart(2, '0')}`
+      result[dayKey] = { open: openStr, close: closeStr }
+    }
+  }
+
   return result
 }
 
