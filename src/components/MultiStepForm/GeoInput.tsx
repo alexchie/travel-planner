@@ -306,8 +306,7 @@ export default function GeoInput({ value, onChange, onOpenHours, onNameChange, n
           </p>
         )}
         {hoursStatus === 'fetching' && <p className="text-xs text-blue-500">正在抓取營業時間…</p>}
-        {hoursStatus === 'found' && !pendingHours && <p className="text-xs text-green-600">已自動填入營業時間（全天開放）</p>}
-        {hoursStatus === 'not_found' && <p className="text-xs text-amber-500">查無營業時間，請手動設定</p>}
+        {hoursStatus === 'found' && !pendingHours && <p className="text-xs text-green-600">已自動填入營業時間</p>}
       </div>
 
       {pendingHours && onOpenHours && (
