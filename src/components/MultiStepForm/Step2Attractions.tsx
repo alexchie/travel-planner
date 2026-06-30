@@ -45,6 +45,21 @@ export default function Step2Attractions() {
     setList((l) => l.map((a) => (a.id === id ? { ...a, ...patch } : a)))
   }
 
+  function addFromHistory(h: ReturnType<typeof listPlaceHistory>[number]) {
+    if (list.some(a => a.name.trim() === h.name.trim())) return
+    const a: Attraction = {
+      id: uuidv4(),
+      name: h.name,
+      location: h.location,
+      openHours: h.openHours,
+      durationMinutes: 60,
+      priority: 'must',
+      timeWindowRequired: null,
+    }
+    setList(l => [...l, a])
+    setExpanded(a.id)
+  }
+
   function next() {
     dispatch({ type: 'SET_ATTRACTIONS', attractions: list })
     dispatch({ type: 'SET_STEP', step: 3 })
