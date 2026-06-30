@@ -53,6 +53,7 @@ const initial: AppState = {
   isEditing: false,
   conflicts: [],
   loading: false,
+  aiError: null,
 }
 
 function reducer(state: AppState, action: Action): AppState {
