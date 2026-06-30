@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDispatch } from '../../store'
-import { listSessions, loadSession, deleteSession } from '../../lib/history'
+import { listSessions, loadSession, deleteSession, renameSession } from '../../lib/history'
 import type { StoredSession } from '../../lib/history'
 
 type SessionSummary = ReturnType<typeof listSessions>[number]
