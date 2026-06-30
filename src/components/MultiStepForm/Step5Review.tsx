@@ -41,15 +41,30 @@ export default function Step5Review() {
         itinerary = optimize(trip, attractions, restaurants, accommodations)
       }
 
+      const totalStops = itinerary.reduce((s, d) => s + d.stops.filter((st) => st.type !== 'accommodation').length, 0)
       dispatch({ type: 'SET_RESULT', original: itinerary, conflicts: [], aiError })
-      saveSession({
+
+      saveLocalSession({
+        tripInfo: trip,
+        attractions,
+        restaurants,
+        accommodations,
+        itinerary,
+        totalDays: itinerary.length,
+        totalStops,
+      })
+      savePlaces([
+        ...attractions.map(a => ({ id: a.id, name: a.name, location: a.location, openHours: a.openHours, placeType: 'attraction' as const, useCount: 1, lastUsedAt: new Date().toISOString() })),
+        ...restaurants.map(r => ({ id: r.id, name: r.name, location: r.location, openHours: r.openHours, placeType: 'restaurant' as const, useCount: 1, lastUsedAt: new Date().toISOString() })),
+      ])
+      saveSupabaseSession({
         trip_info: trip,
         attractions,
         restaurants,
         accommodations,
         itinerary,
         total_days: itinerary.length,
-        total_stops: itinerary.reduce((s, d) => s + d.stops.filter((st) => st.type !== 'accommodation').length, 0),
+        total_stops: totalStops,
       })
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
