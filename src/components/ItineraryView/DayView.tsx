@@ -20,10 +20,22 @@ import MapView from '../MapView'
 const DOW_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
 const DOW_ZH = ['日', '一', '二', '三', '四', '五', '六']
 
-const TYPE_COLOR: Record<string, string> = {
+const TYPE_BORDER: Record<string, string> = {
+  attraction: 'border-l-blue-400',
+  restaurant: 'border-l-amber-400',
+  accommodation: 'border-l-emerald-400',
+}
+
+const TYPE_DOT: Record<string, string> = {
   attraction: 'bg-blue-500',
   restaurant: 'bg-amber-500',
-  accommodation: 'bg-gray-500',
+  accommodation: 'bg-emerald-500',
+}
+
+const TYPE_BADGE: Record<string, string> = {
+  attraction: 'badge-blue',
+  restaurant: 'badge-amber',
+  accommodation: 'badge-green',
 }
 
 const TYPE_LABEL: Record<string, string> = {
