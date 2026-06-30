@@ -246,6 +246,7 @@ export default function ItineraryView() {
                 onReorder={(from, to) => handleReorder(currentDay.dayIndex, from, to)}
                 onAddStop={isEditing ? () => { setAddTab('list'); setAddModal(true) } : undefined}
                 onRemoveStop={isEditing ? handleRemoveStop : undefined}
+                openHoursMap={openHoursMap}
               />
             </div>
           )}
