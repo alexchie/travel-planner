@@ -3,7 +3,8 @@ import { useDispatch, useAppState } from '../../store'
 import { TRANSPORT_LABEL, MEAL_TYPE_LABEL } from '../../types'
 import { detectConflicts } from '../../optimizer/conflictDetection'
 import { optimize } from '../../optimizer'
-import { saveSession } from '../../lib/supabase'
+import { saveSession as saveSupabaseSession } from '../../lib/supabase'
+import { saveSession as saveLocalSession, savePlaces } from '../../lib/history'
 import { isClaudeConfigured, optimizeWithClaude } from '../../lib/claudeOptimizer'
 
 export default function Step5Review() {
