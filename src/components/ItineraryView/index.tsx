@@ -205,14 +205,14 @@ export default function ItineraryView() {
               <button
                 key={day.dayIndex}
                 onClick={() => setActiveDay(day.dayIndex)}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 ${
                   activeDay === day.dayIndex
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300 hover:text-slate-700'
                 }`}
               >
                 <div>第 {day.dayIndex} 天</div>
-                <div className={`text-xs ${activeDay === day.dayIndex ? 'text-blue-100' : 'text-gray-400'}`}>
+                <div className={`text-[10px] font-normal mt-0.5 ${activeDay === day.dayIndex ? 'text-blue-100' : 'text-slate-400'}`}>
                   {day.date}
                 </div>
               </button>
