@@ -110,6 +110,25 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, page: 'form', currentStep: 1 }
     case 'GO_TO_RESULT':
       return { ...state, page: 'result' }
+    case 'GO_TO_HOME':
+      return { ...state, page: 'home' }
+    case 'NEW_TRIP':
+      return { ...initial, page: 'form' }
+    case 'LOAD_SESSION':
+      return {
+        ...state,
+        page: 'result',
+        trip: action.session.tripInfo,
+        attractions: action.session.attractions,
+        restaurants: action.session.restaurants,
+        accommodations: action.session.accommodations,
+        originalItinerary: action.session.itinerary,
+        editedItinerary: null,
+        isEditing: false,
+        conflicts: [],
+        loading: false,
+        aiError: null,
+      }
     case 'ADD_STOP': {
       if (!state.editedItinerary) return state
       return {
