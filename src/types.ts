@@ -98,6 +98,7 @@ export const SNACK_REQUIRED: Record<MealType, number> = {
   lunch: 3,
   dinner: 3,
   afternoon_tea: 1,
+  supper: 2,
   any: 0,
 }
 
@@ -106,6 +107,7 @@ export const MEAL_TYPE_LABEL: Record<MealType, string> = {
   lunch: '午餐',
   dinner: '晚餐',
   afternoon_tea: '下午茶',
+  supper: '宵夜',
   any: '都可以',
 }
 
