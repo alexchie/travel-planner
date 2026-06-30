@@ -28,19 +28,19 @@ export default function Step5Review() {
       }
 
       let itinerary
+      let aiError: string | undefined
       if (isClaudeConfigured) {
         try {
           itinerary = await optimizeWithClaude(trip, attractions, restaurants, accommodations)
         } catch (e) {
-          const reason = e instanceof Error ? e.message : String(e)
-          setErrorMsg(`AI 規劃失敗（${reason}），已改用本地演算法排程`)
+          aiError = e instanceof Error ? e.message : String(e)
           itinerary = optimize(trip, attractions, restaurants, accommodations)
         }
       } else {
         itinerary = optimize(trip, attractions, restaurants, accommodations)
       }
 
-      dispatch({ type: 'SET_RESULT', original: itinerary, conflicts: [] })
+      dispatch({ type: 'SET_RESULT', original: itinerary, conflicts: [], aiError })
       saveSession({
         trip_info: trip,
         attractions,
