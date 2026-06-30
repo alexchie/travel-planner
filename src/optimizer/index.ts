@@ -61,11 +61,19 @@ interface ScheduleItem {
   openHours: Record<string, { open: string; close: string } | null>
 }
 
+function effectiveCloseMin(openStr: string, closeStr: string): number {
+  const o = timeToMinutes(openStr)
+  let c = timeToMinutes(closeStr)
+  if (c === 0) c = 1440
+  if (c <= o) c += 1440
+  return c
+}
+
 function isOpenOnDay(item: ScheduleItem, dayKey: string, startMin: number): boolean {
   const hours = item.openHours[dayKey]
   if (!hours) return false
   const open = timeToMinutes(hours.open)
-  const close = timeToMinutes(hours.close)
+  const close = effectiveCloseMin(hours.open, hours.close)
   return startMin >= open && startMin + item.durationMinutes <= close + 30
 }
 
