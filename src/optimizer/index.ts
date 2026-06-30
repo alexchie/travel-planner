@@ -271,7 +271,7 @@ export function optimize(
       let warningMsg = ''
       if (dayHours) {
         const openMin = timeToMinutes(dayHours.open)
-        const closeMin = timeToMinutes(dayHours.close)
+        const closeMin = effectiveCloseMin(dayHours.open, dayHours.close)
         if (arrival < openMin || departure > closeMin + 30) {
           itemWarning = true
           warningMsg = `營業時間 ${dayHours.open}–${dayHours.close}，但安排在 ${minutesToTime(arrival)}–${minutesToTime(departure)}`
