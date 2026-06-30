@@ -110,6 +110,7 @@ export default function GeoInput({ value, onChange, onOpenHours, onNameChange, n
 
   const [loading, setLoading] = useState(false)
   const [hoursStatus, setHoursStatus] = useState<'idle' | 'fetching' | 'found' | 'not_found'>('idle')
+  const [pendingHours, setPendingHours] = useState<OpenHours | null>(null)
   const [internalQuery, setInternalQuery] = useState(() =>
     value.address ? value.address.split(',')[0].trim() : ''
   )
