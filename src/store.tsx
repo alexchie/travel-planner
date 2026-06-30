@@ -20,6 +20,7 @@ interface AppState {
   isEditing: boolean
   conflicts: Conflict[]
   loading: boolean
+  aiError: string | null
 }
 
 type Action =
