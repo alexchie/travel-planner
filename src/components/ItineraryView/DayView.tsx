@@ -260,6 +260,8 @@ export default function DayView({ day, dayIdx, isEditing, onReorder, onAddStop, 
                 index={i}
                 isEditing={isEditing}
                 onRemove={onRemoveStop ? () => onRemoveStop(stop.id) : undefined}
+                date={day.date}
+                openHoursMap={openHoursMap}
               />
             ))}
           </div>
