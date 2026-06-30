@@ -241,26 +241,17 @@ export default function ItineraryView() {
             </div>
           )}
 
-          <div className="card bg-gray-50">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">總覽</h3>
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div>
-                <div className="text-xl font-bold text-blue-600">{itinerary.length}</div>
-                <div className="text-xs text-gray-500">天數</div>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { value: itinerary.length, unit: '天', label: '總天數' },
+              { value: itinerary.reduce((s, d) => s + d.stops.filter((st) => st.type !== 'accommodation').length, 0), unit: '個', label: '景點餐廳' },
+              { value: `${Math.round(itinerary.reduce((s, d) => s + d.totalTravelMinutes, 0) / 60 * 10) / 10}h`, unit: '', label: '總交通' },
+            ].map((stat) => (
+              <div key={stat.label} className="card text-center py-4">
+                <div className="text-2xl font-bold text-blue-600">{stat.value}<span className="text-sm font-normal ml-0.5">{stat.unit}</span></div>
+                <div className="text-xs text-slate-400 mt-0.5">{stat.label}</div>
               </div>
-              <div>
-                <div className="text-xl font-bold text-blue-600">
-                  {itinerary.reduce((s, d) => s + d.stops.filter((st) => st.type !== 'accommodation').length, 0)}
-                </div>
-                <div className="text-xs text-gray-500">地點</div>
-              </div>
-              <div>
-                <div className="text-xl font-bold text-blue-600">
-                  {Math.round(itinerary.reduce((s, d) => s + d.totalTravelMinutes, 0) / 60 * 10) / 10}h
-                </div>
-                <div className="text-xs text-gray-500">總交通時間</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
