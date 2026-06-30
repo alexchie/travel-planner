@@ -112,8 +112,6 @@ export const MEAL_TYPE_LABEL: Record<MealType, string> = {
 export const TRANSPORT_LABEL: Record<TransportMode, string> = {
   car: '汽車',
   motorcycle: '機車',
-  bicycle: '腳踏車',
-  ubike: 'Ubike',
   walking: '走路',
   transit: '大眾交通',
 }
