@@ -48,10 +48,16 @@ export function saveSession(
   return id
 }
 
-export function listSessions(): Pick<StoredSession, 'id' | 'createdAt' | 'tripInfo' | 'totalDays' | 'totalStops'>[] {
+export function listSessions(): Pick<StoredSession, 'id' | 'name' | 'createdAt' | 'tripInfo' | 'totalDays' | 'totalStops'>[] {
   return readJSON<StoredSession[]>(SESSIONS_KEY, []).map(
-    ({ id, createdAt, tripInfo, totalDays, totalStops }) => ({ id, createdAt, tripInfo, totalDays, totalStops })
+    ({ id, name, createdAt, tripInfo, totalDays, totalStops }) => ({ id, name, createdAt, tripInfo, totalDays, totalStops })
   )
+}
+
+export function renameSession(id: string, name: string): void {
+  const list = readJSON<StoredSession[]>(SESSIONS_KEY, [])
+  const updated = list.map(s => s.id === id ? { ...s, name: name.trim() || undefined } : s)
+  localStorage.setItem(SESSIONS_KEY, JSON.stringify(updated))
 }
 
 export function loadSession(id: string): StoredSession | null {
