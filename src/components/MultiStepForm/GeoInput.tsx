@@ -1,6 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
 import type { GeoPoint, OpenHours } from '../../types'
+import { DAY_KEYS, DAY_LABELS } from '../../types'
 import { parseOsmOpeningHours, parseGoogleOpenHours } from '../../utils/parseOpenHours'
+
+const ALL_OPEN: OpenHours = {
+  mon: { open: '00:00', close: '23:59' }, tue: { open: '00:00', close: '23:59' },
+  wed: { open: '00:00', close: '23:59' }, thu: { open: '00:00', close: '23:59' },
+  fri: { open: '00:00', close: '23:59' }, sat: { open: '00:00', close: '23:59' },
+  sun: { open: '00:00', close: '23:59' },
+}
 
 const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY as string | undefined
 const USE_GOOGLE = !!GOOGLE_KEY
