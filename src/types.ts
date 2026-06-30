@@ -1,4 +1,4 @@
-export type TransportMode = 'motorcycle' | 'car' | 'bicycle' | 'ubike' | 'walking' | 'transit'
+export type TransportMode = 'motorcycle' | 'car' | 'walking' | 'transit'
 export type Priority = 'must' | 'flexible'
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'afternoon_tea' | 'any'
 export type MealAssignmentMode = 'fixed_day' | 'fixed_meal_only' | 'flexible'
