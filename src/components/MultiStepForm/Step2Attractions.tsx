@@ -29,6 +29,7 @@ export default function Step2Attractions() {
     attractions.length > 0 ? attractions : []
   )
   const [expanded, setExpanded] = useState<string | null>(null)
+  const history = useMemo(() => listPlaceHistory('attraction'), [])
 
   function add() {
     const a = emptyAttraction()
