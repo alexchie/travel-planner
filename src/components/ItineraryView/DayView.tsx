@@ -37,6 +37,14 @@ function toMin(t: string): number {
   return h * 60 + m
 }
 
+function effectiveCloseMin(openStr: string, closeStr: string): number {
+  const o = toMin(openStr)
+  let c = toMin(closeStr)
+  if (c === 0) c = 1440       // "00:00" 代表午夜 = 一天結束
+  if (c <= o) c += 1440       // 跨夜（例如 11:30–01:30）
+  return c
+}
+
 function computeHoursConflict(
   stop: Stop,
   date: string,
@@ -58,7 +66,7 @@ function computeHoursConflict(
   const arrival = toMin(stop.arrivalTime)
   const departure = toMin(stop.departureTime)
   const open = toMin(dh.open)
-  const close = toMin(dh.close)
+  const close = effectiveCloseMin(dh.open, dh.close)
   if (arrival < open || departure > close) {
     return {
       todayHours: dh,
