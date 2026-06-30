@@ -199,9 +199,10 @@ interface Props {
   onReorder: (fromIdx: number, toIdx: number) => void
   onAddStop?: () => void
   onRemoveStop?: (stopId: string) => void
+  openHoursMap: Record<string, OpenHours>
 }
 
-export default function DayView({ day, dayIdx, isEditing, onReorder, onAddStop, onRemoveStop }: Props) {
+export default function DayView({ day, dayIdx, isEditing, onReorder, onAddStop, onRemoveStop, openHoursMap }: Props) {
   const [showMap, setShowMap] = useState(true)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
