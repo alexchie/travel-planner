@@ -263,9 +263,47 @@ export default function GeoInput({ value, onChange, onOpenHours, onNameChange, n
           </p>
         )}
         {hoursStatus === 'fetching' && <p className="text-xs text-blue-500">正在抓取營業時間…</p>}
-        {hoursStatus === 'found' && <p className="text-xs text-green-600">已自動填入營業時間</p>}
+        {hoursStatus === 'found' && !pendingHours && <p className="text-xs text-green-600">已自動填入營業時間（全天開放）</p>}
         {hoursStatus === 'not_found' && <p className="text-xs text-amber-500">查無營業時間，請手動設定</p>}
       </div>
+
+      {pendingHours && onOpenHours && (
+        <div className="mt-2 border border-amber-300 bg-amber-50 rounded-lg p-3 space-y-2">
+          <p className="text-xs font-semibold text-amber-800">
+            Google Maps 回傳的營業時間含公休日，請確認是否正確：
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {DAY_KEYS.map(day => {
+              const h = pendingHours[day]
+              return h ? (
+                <span key={day} className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                  週{DAY_LABELS[day]} {h.open}–{h.close}
+                </span>
+              ) : (
+                <span key={day} className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-semibold">
+                  週{DAY_LABELS[day]} 休
+                </span>
+              )
+            })}
+          </div>
+          <div className="flex gap-2 pt-0.5">
+            <button
+              type="button"
+              onClick={() => { onOpenHours(pendingHours); setPendingHours(null) }}
+              className="text-xs bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded font-medium"
+            >
+              套用此資料
+            </button>
+            <button
+              type="button"
+              onClick={() => { onOpenHours(ALL_OPEN); setPendingHours(null) }}
+              className="text-xs bg-white hover:bg-amber-50 border border-amber-400 text-amber-700 px-3 py-1.5 rounded font-medium"
+            >
+              全天開放（無休）
+            </button>
+          </div>
+        </div>
+      )}
 
       {showDropdown && results.length > 0 && (
         <div className="absolute z-50 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-1 max-h-64 overflow-y-auto">
