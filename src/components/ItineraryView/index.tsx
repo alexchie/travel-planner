@@ -35,6 +35,10 @@ export default function ItineraryView() {
   const itinerary = isEditing ? editedItinerary : originalItinerary
   if (!itinerary || !trip) return null
 
+  const openHoursMap: Record<string, OpenHours> = {}
+  for (const a of attractions) openHoursMap[a.name.trim()] = a.openHours
+  for (const r of restaurants) openHoursMap[r.name.trim()] = r.openHours
+
   const allStopNames = new Set(
     itinerary.flatMap((d) => d.stops.map((s) => s.name.trim().toLowerCase()))
   )
