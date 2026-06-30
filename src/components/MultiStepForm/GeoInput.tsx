@@ -342,23 +342,48 @@ export default function GeoInput({ value, onChange, onOpenHours, onNameChange, n
         </div>
       )}
 
-      {showDropdown && results.length > 0 && (
-        <div className="absolute z-50 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-1 max-h-64 overflow-y-auto">
-          <div className="px-3 py-1.5 text-xs text-gray-500 border-b border-gray-100 flex items-center gap-1.5">
-            找到 {results.length} 個結果，點擊選取
-            {USE_GOOGLE && <span className="text-blue-500">· Google Maps</span>}
-          </div>
-          {results.map((r, i) => (
-            <button
-              key={i}
-              type="button"
-              className="w-full text-left px-4 py-2.5 hover:bg-blue-50 border-b border-gray-100 last:border-0 transition-colors"
-              onClick={() => selectResult(r)}
-            >
-              <div className="text-sm font-medium text-gray-900">{r.short_name || r.display_name.split(',')[0]}</div>
-              <div className="text-xs text-gray-400 mt-0.5 truncate">{r.display_name}</div>
-            </button>
-          ))}
+      {showDropdown && (historyResults.length > 0 || results.length > 0) && (
+        <div className="absolute z-50 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-1 max-h-72 overflow-y-auto">
+          {historyResults.length > 0 && (
+            <>
+              <div className="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
+                歷史紀錄
+              </div>
+              {historyResults.map((h) => (
+                <button
+                  key={h.id}
+                  type="button"
+                  className="w-full text-left px-4 py-2.5 hover:bg-amber-50 border-b border-gray-100 transition-colors flex items-center gap-2"
+                  onClick={() => selectHistory(h)}
+                >
+                  <span className="text-xs bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded flex-shrink-0">歷史</span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-gray-900">{h.name}</div>
+                    <div className="text-xs text-gray-400 mt-0.5 truncate">{h.location.address.split(',').slice(0, 2).join(',')}</div>
+                  </div>
+                </button>
+              ))}
+            </>
+          )}
+          {results.length > 0 && (
+            <>
+              <div className="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-100 bg-gray-50 flex items-center gap-1.5">
+                搜尋結果
+                {USE_GOOGLE && <span className="text-blue-400">· Google Maps</span>}
+              </div>
+              {results.map((r, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="w-full text-left px-4 py-2.5 hover:bg-blue-50 border-b border-gray-100 last:border-0 transition-colors"
+                  onClick={() => selectResult(r)}
+                >
+                  <div className="text-sm font-medium text-gray-900">{r.short_name || r.display_name.split(',')[0]}</div>
+                  <div className="text-xs text-gray-400 mt-0.5 truncate">{r.display_name}</div>
+                </button>
+              ))}
+            </>
+          )}
         </div>
       )}
     </div>
