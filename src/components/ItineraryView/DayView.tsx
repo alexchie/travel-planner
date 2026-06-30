@@ -179,7 +179,7 @@ function StopCard({
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="font-semibold text-sm text-slate-900 leading-tight">{stop.name}</span>
                   <span className={badgeClass}>
-                    {stop.mealType ? MEAL_TYPE_LABEL[stop.mealType] : TYPE_LABEL[stop.type]}
+                    {stopLabel}
                   </span>
                   {stop.isAiRecommended && (
                     <span className="badge-teal">AI 推薦</span>
