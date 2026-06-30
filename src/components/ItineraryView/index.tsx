@@ -222,10 +222,10 @@ export default function ItineraryView() {
           {currentDay && (
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">
+                <h3 className="font-semibold text-slate-900">
                   第 {currentDay.dayIndex} 天 · {currentDay.date}
                 </h3>
-                <span className="text-xs text-gray-400">
+                <span className="badge-gray">
                   {currentDay.stops.filter((s) => s.type !== 'accommodation').length} 個地點
                 </span>
               </div>
