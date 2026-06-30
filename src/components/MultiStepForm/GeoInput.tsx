@@ -204,10 +204,20 @@ export default function GeoInput({ value, onChange, onOpenHours, onNameChange, n
 
     if (!onOpenHours) return
     setHoursStatus('fetching')
+    setPendingHours(null)
     try {
       const hours = await doFetchHours(r)
-      if (hours) { onOpenHours(hours); setHoursStatus('found') }
-      else setHoursStatus('not_found')
+      if (hours) {
+        const hasClosedDay = DAY_KEYS.some(d => hours[d] === null)
+        if (hasClosedDay) {
+          setPendingHours(hours)  // 有公休日 → 等用戶確認
+        } else {
+          onOpenHours(hours)      // 全天皆開放 → 直接套用
+        }
+        setHoursStatus('found')
+      } else {
+        setHoursStatus('not_found')
+      }
     } catch {
       setHoursStatus('not_found')
     }
