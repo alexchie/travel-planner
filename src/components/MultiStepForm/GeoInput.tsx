@@ -150,11 +150,17 @@ export default function GeoInput({ value, onChange, onOpenHours, onNameChange, n
     } else {
       setInternalQuery(text)
     }
-    setShowDropdown(false)
-
     if (text.length >= 2 && !justSelectedRef.current) {
+      const hist = searchPlaceHistory(text)
+      setHistoryResults(hist)
+      if (hist.length > 0) setShowDropdown(true)
+      else setShowDropdown(false)
+
       if (debounceRef.current) clearTimeout(debounceRef.current)
       debounceRef.current = setTimeout(() => autoSearch(text), 550)
+    } else {
+      setHistoryResults([])
+      setShowDropdown(false)
     }
   }
 
