@@ -29,7 +29,7 @@ type Action =
   | { type: 'SET_ATTRACTIONS'; attractions: Attraction[] }
   | { type: 'SET_RESTAURANTS'; restaurants: Restaurant[] }
   | { type: 'SET_ACCOMMODATIONS'; accommodations: Accommodation[] }
-  | { type: 'SET_RESULT'; original: DayItinerary[]; conflicts: Conflict[] }
+  | { type: 'SET_RESULT'; original: DayItinerary[]; conflicts: Conflict[]; aiError?: string }
   | { type: 'ENTER_EDIT' }
   | { type: 'EXIT_EDIT' }
   | { type: 'SAVE_EDIT' }
