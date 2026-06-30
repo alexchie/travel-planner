@@ -35,6 +35,14 @@ function timeToMinutes(t: string): number {
   return (h || 0) * 60 + (m || 0)
 }
 
+function effectiveCloseMin(openStr: string, closeStr: string): number {
+  const o = timeToMinutes(openStr)
+  let c = timeToMinutes(closeStr)
+  if (c === 0) c = 1440
+  if (c <= o) c += 1440
+  return c
+}
+
 const DOW_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
 const DOW_ZH = ['日', '一', '二', '三', '四', '五', '六']
 
