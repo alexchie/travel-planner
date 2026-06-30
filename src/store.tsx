@@ -46,7 +46,7 @@ type Action =
   | { type: 'REMOVE_STOP'; dayIndex: number; stopId: string }
 
 const initial: AppState = {
-  page: 'form',
+  page: 'home',
   currentStep: 1,
   trip: null,
   attractions: [],
