@@ -48,7 +48,7 @@ export default function Step3Restaurants() {
   }
 
   function checkSnackCounts(): SnackModal {
-    const mealTypes: MealType[] = ['breakfast', 'lunch', 'dinner', 'afternoon_tea']
+    const mealTypes: MealType[] = ['breakfast', 'lunch', 'dinner', 'afternoon_tea', 'supper']
     for (const mt of mealTypes) {
       const required = SNACK_REQUIRED[mt]
       const fullMeals = list.filter((r) => r.mealType === mt && r.dishType === 'full_meal').length
