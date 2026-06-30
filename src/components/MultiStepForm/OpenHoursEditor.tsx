@@ -1,5 +1,6 @@
 import type{OpenHours}from '../../types'
 import{DAY_KEYS,DAY_LABELS}from '../../types'
+import TimeInput24 from './TimeInput24'
 
 interface Props{value:OpenHours;onChange:(v:OpenHours)=>void}
 
