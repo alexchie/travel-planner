@@ -21,10 +21,17 @@ function DayIcon({ days }: { days: number }) {
 export default function HomePage() {
   const dispatch = useDispatch()
   const [sessions, setSessions] = useState<SessionSummary[]>([])
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState('')
+  const editInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setSessions(listSessions())
   }, [])
+
+  useEffect(() => {
+    if (editingId) editInputRef.current?.focus()
+  }, [editingId])
 
   function handleLoad(id: string) {
     const session = loadSession(id)
@@ -38,8 +45,20 @@ export default function HomePage() {
     setSessions(listSessions())
   }
 
+  function startEdit(id: string, currentName: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    setEditingId(id)
+    setEditingName(currentName)
+  }
+
+  function commitEdit(id: string) {
+    renameSession(id, editingName)
+    setSessions(listSessions())
+    setEditingId(null)
+  }
+
   const dest = (s: SessionSummary) =>
-    s.tripInfo.startLocation?.address?.split(',')[0]?.trim() ?? '行程'
+    s.name || s.tripInfo.startLocation?.address?.split(',')[0]?.trim() || '行程'
   const startDate = (s: SessionSummary) =>
     s.tripInfo.arrivalDatetime ? formatDate(s.tripInfo.arrivalDatetime.slice(0, 10)) : ''
 
