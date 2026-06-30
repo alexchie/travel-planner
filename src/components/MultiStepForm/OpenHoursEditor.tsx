@@ -38,9 +38,11 @@ export default function OpenHoursEditor({value,onChange}:Props){
               <span className="text-gray-700">週{DAY_LABELS[day]}</span>
             </label>
             {hours?(
-              <><input type="time" className="input w-28 py-1" value={hours.open} onChange={e=>update(day,'open',e.target.value)}/>
-              <span className="text-gray-400">–</span>
-              <input type="time" className="input w-28 py-1" value={hours.close} onChange={e=>update(day,'close',e.target.value)}/></>
+              <>
+                <TimeInput24 value={hours.open} onChange={v=>update(day,'open',v)} className="input w-24 py-1 text-sm"/>
+                <span className="text-gray-400">–</span>
+                <TimeInput24 value={hours.close} onChange={v=>update(day,'close',v)} className="input w-24 py-1 text-sm"/>
+              </>
             ):<span className="text-gray-400 text-xs">公休</span>}
           </div>
         )
