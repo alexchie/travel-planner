@@ -347,6 +347,24 @@ export default function GeoInput({ value, onChange, onOpenHours, onNameChange, n
         </div>
       )}
 
+      {noHoursWarning && onOpenHours && (
+        <div className="mt-2 border border-amber-300 bg-amber-50 rounded-lg p-3 space-y-1.5">
+          <p className="text-xs font-semibold text-amber-800">
+            查無營業時間，已預設為每天 00:00–24:00 全天開放
+          </p>
+          <p className="text-xs text-amber-700">
+            請至下方「營業時間設定」確認或手動調整，避免排程錯誤。
+          </p>
+          <button
+            type="button"
+            onClick={() => setNoHoursWarning(false)}
+            className="text-xs text-amber-600 underline hover:text-amber-800"
+          >
+            我知道了
+          </button>
+        </div>
+      )}
+
       {showDropdown && (historyResults.length > 0 || results.length > 0) && (
         <div className="absolute z-50 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-1 max-h-72 overflow-y-auto">
           {historyResults.length > 0 && (
