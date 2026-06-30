@@ -117,13 +117,37 @@ export default function HomePage() {
               >
                 <DayIcon days={s.totalDays} />
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-900 truncate">{dest(s)}</p>
+                  {editingId === s.id ? (
+                    <input
+                      ref={editInputRef}
+                      className="text-sm font-semibold text-slate-900 border-b border-blue-400 outline-none bg-transparent w-full max-w-xs"
+                      value={editingName}
+                      onChange={e => setEditingName(e.target.value)}
+                      onBlur={() => commitEdit(s.id)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') { e.preventDefault(); commitEdit(s.id) }
+                        if (e.key === 'Escape') setEditingId(null)
+                      }}
+                      onClick={e => e.stopPropagation()}
+                    />
+                  ) : (
+                    <p className="font-semibold text-slate-900 truncate">{dest(s)}</p>
+                  )}
                   <p className="text-xs text-slate-400 mt-0.5">
                     {startDate(s) && <span>{startDate(s)} · </span>}
                     {s.totalStops} 個地點 · 規劃於 {formatDate(s.createdAt)}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    onClick={e => startEdit(s.id, dest(s), e)}
+                    className="p-1.5 text-slate-300 hover:text-blue-400 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="重新命名"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828A2 2 0 0110.414 16H8v-2.414a2 2 0 01.586-1.414z" />
+                    </svg>
+                  </button>
                   <span className="badge-blue">查看</span>
                   <button
                     onClick={(e) => handleDelete(s.id, e)}
