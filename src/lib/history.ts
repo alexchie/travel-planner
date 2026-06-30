@@ -3,6 +3,7 @@ import type { TripInfo, Attraction, Restaurant, Accommodation, DayItinerary, Geo
 
 export interface StoredSession {
   id: string
+  name?: string
   createdAt: string
   tripInfo: TripInfo
   attractions: Attraction[]
