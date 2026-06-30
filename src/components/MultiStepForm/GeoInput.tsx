@@ -177,6 +177,25 @@ export default function GeoInput({ value, onChange, onOpenHours, onNameChange, n
     finally { setLoading(false) }
   }
 
+  function selectHistory(h: PlaceHistory) {
+    justSelectedRef.current = true
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+
+    onChange(h.location)
+    if (isNameMode) onNameChange!(h.name)
+    else setInternalQuery(h.name)
+
+    setShowDropdown(false)
+    setResults([])
+    setHistoryResults([])
+
+    if (onOpenHours) {
+      onOpenHours(h.openHours)
+      setHoursStatus('found')
+    }
+    setTimeout(() => { justSelectedRef.current = false }, 800)
+  }
+
   async function search() {
     const q = query.trim()
     if (!q) return
