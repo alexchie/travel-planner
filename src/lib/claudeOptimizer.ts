@@ -260,6 +260,60 @@ function buildPrompt(
   return lines.join('\n')
 }
 
+const SYSTEM_PROMPT = `你是旅遊行程規劃 AI。你的唯一任務是輸出符合格式的 JSON 陣列。
+規則：
+- 絕對只輸出 JSON，第一個字元必須是 [，最後一個字元必須是 ]
+- 不得輸出任何說明、標題、markdown、code block 或其他文字
+- JSON 必須完整且合法，不得截斷`
+
+async function callClaudeOnce(prompt: string): Promise<DayItinerary[]> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 90_000)
+
+  let res: Response
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'x-api-key': ANTHROPIC_KEY!,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 16000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    })
+  } catch (e) {
+    const isAbort = e instanceof DOMException && e.name === 'AbortError'
+    throw new Error(isAbort ? '逾時（90 秒）' : `網路錯誤：${String(e)}`)
+  } finally {
+    clearTimeout(timer)
+  }
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`API ${res.status}: ${err}`)
+  }
+
+  const data = await res.json()
+  const text = (data.content?.[0]?.text ?? '') as string
+  const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+
+  const jsonStr = extractJsonArray(clean)
+  if (!jsonStr) throw new Error(`未回傳有效 JSON（回應前 200 字：${clean.slice(0, 200)}）`)
+
+  const raw = JSON.parse(jsonStr) as DayItinerary[]
+  return raw.map((day) => ({
+    ...day,
+    stops: day.stops.map((stop) => ({ ...stop, id: stop.id || uuidv4() })),
+  }))
+}
+
 export async function optimizeWithClaude(
   trip: TripInfo,
   attractions: Attraction[],
@@ -288,50 +342,21 @@ export async function optimizeWithClaude(
     console.warn('Google Maps distance matrix failed:', e)
   }
 
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 90_000)
+  const prompt = buildPrompt(trip, attractions, restaurants, accommodations, locs, locNames, matrix)
 
-  let res: Response
-  try {
-    res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'x-api-key': ANTHROPIC_KEY!,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 16000,
-        messages: [{ role: 'user', content: buildPrompt(trip, attractions, restaurants, accommodations, locs, locNames, matrix) }],
-      }),
-    })
-  } catch (e) {
-    const isAbort = e instanceof DOMException && e.name === 'AbortError'
-    throw new Error(isAbort ? 'Claude API 逾時（90 秒），請稍後再試' : `網路錯誤：${String(e)}`)
-  } finally {
-    clearTimeout(timer)
+  const MAX_ATTEMPTS = 3
+  let lastError = ''
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const itinerary = await callClaudeOnce(prompt)
+      return validateAndDedup(itinerary, attractions, restaurants)
+    } catch (e) {
+      lastError = e instanceof Error ? e.message : String(e)
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, 1500 * attempt))
+      }
+    }
   }
 
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`Claude API ${res.status}: ${err}`)
-  }
-
-  const data = await res.json()
-  const text = (data.content?.[0]?.text ?? '') as string
-  const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-
-  const jsonStr = extractJsonArray(clean)
-  if (!jsonStr) throw new Error('Claude 未回傳有效 JSON')
-
-  const raw = JSON.parse(jsonStr) as DayItinerary[]
-  const itinerary = raw.map((day) => ({
-    ...day,
-    stops: day.stops.map((stop) => ({ ...stop, id: stop.id || uuidv4() })),
-  }))
-
-  return validateAndDedup(itinerary, attractions, restaurants)
+  throw new Error(`${MAX_ATTEMPTS} 次嘗試均失敗，最後錯誤：${lastError}`)
 }
