@@ -308,7 +308,9 @@ export default function DayView({ day, dayIdx, isEditing, onReorder, onAddStop, 
       {isEditing && onAddStop && (
         <button
           onClick={onAddStop}
-          className="w-full py-2 border-2 border-dashed border-blue-300 text-blue-500 hover:border-blue-400 hover:text-blue-600 rounded-lg text-sm font-medium transition-colors"
+          className="w-full py-2.5 border-2 border-dashed border-blue-200 text-blue-500
+                     hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600
+                     rounded-xl text-sm font-medium transition-all duration-150"
         >
           + 新增地點
         </button>
