@@ -33,6 +33,7 @@ export default function Step3Restaurants() {
   )
   const [expanded, setExpanded] = useState<string | null>(null)
   const [snackModal, setSnackModal] = useState<SnackModal>(null)
+  const history = useMemo(() => listPlaceHistory('restaurant'), [])
 
   function add() {
     const r = emptyRestaurant()
