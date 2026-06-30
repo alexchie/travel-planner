@@ -214,17 +214,13 @@ export default function Step2Attractions() {
                   )}
                 </div>
 
-                <details className="text-sm">
-                  <summary className="cursor-pointer text-gray-500 hover:text-gray-700 font-medium">
-                    營業時間設定
-                  </summary>
-                  <div className="mt-2">
-                    <OpenHoursEditor
-                      value={attr.openHours}
-                      onChange={(h) => update(attr.id, { openHours: h })}
-                    />
-                  </div>
-                </details>
+                <div className="text-sm">
+                  <p className="font-medium text-gray-700 mb-2">營業時間設定</p>
+                  <OpenHoursEditor
+                    value={attr.openHours}
+                    onChange={(h) => update(attr.id, { openHours: h })}
+                  />
+                </div>
               </div>
             )}
           </div>
