@@ -7,30 +7,29 @@ export default function App() {
   const { page } = useAppState()
   const dispatch = useDispatch()
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-app">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-100 sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
           <button
             onClick={() => dispatch({ type: 'GO_TO_HOME' })}
-            className="flex items-center gap-3 hover:opacity-75 transition-opacity"
+            className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
           >
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">T</div>
-            <div className="text-left">
-              <h1 className="text-lg font-bold text-gray-900">自動行程規劃系統</h1>
-              <p className="text-xs text-gray-500">最短交通時間 · 智能排程</p>
+            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
+              T
             </div>
+            <span className="font-bold text-slate-800 text-sm tracking-tight">行程規劃系統</span>
           </button>
           {page !== 'home' && (
             <button
               onClick={() => dispatch({ type: 'GO_TO_HOME' })}
-              className="text-sm text-gray-500 hover:text-blue-600 transition-colors"
+              className="btn-ghost"
             >
               首頁
             </button>
           )}
         </div>
       </header>
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <main className="max-w-6xl mx-auto px-4 py-7">
         {page === 'home' && <HomePage />}
         {page === 'form' && <MultiStepForm />}
         {page === 'result' && <ItineraryView />}
