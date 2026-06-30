@@ -272,30 +272,23 @@ export default function ItineraryView() {
 
               {unscheduledAttractions.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">景點</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">景點</p>
                   <div className="space-y-1.5">
                     {unscheduledAttractions.map((a) => (
-                      <div
-                        key={a.id}
-                        className="flex items-start justify-between gap-2 px-2 py-2 rounded-lg bg-gray-50 border border-gray-100"
-                      >
+                      <div key={a.id} className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-100">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1 flex-wrap">
-                            <span className="text-sm font-medium text-gray-800 leading-tight">{a.name || '（未命名）'}</span>
-                            {a.priority === 'must' && (
-                              <span className="text-xs bg-red-100 text-red-600 px-1 py-0.5 rounded leading-none flex-shrink-0">必去</span>
-                            )}
+                            <span className="text-xs font-semibold text-slate-800 leading-tight">{a.name || '（未命名）'}</span>
+                            {a.priority === 'must' && <span className="badge-red">必去</span>}
                           </div>
-                          <span className="text-xs text-gray-400">{a.durationMinutes} 分鐘</span>
+                          <span className="text-[10px] text-slate-400">{a.durationMinutes} 分鐘</span>
                         </div>
                         {isEditing && (
                           <button
                             onClick={() => addFromExisting(a, 'attraction')}
                             title={`加入第 ${activeDay} 天`}
-                            className="text-blue-500 hover:text-blue-700 text-xl leading-none flex-shrink-0 mt-0.5 font-light"
-                          >
-                            +
-                          </button>
+                            className="w-6 h-6 flex items-center justify-center rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-700 transition-colors flex-shrink-0 font-bold text-sm"
+                          >+</button>
                         )}
                       </div>
                     ))}
@@ -305,35 +298,23 @@ export default function ItineraryView() {
 
               {unscheduledRestaurants.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">餐廳</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">餐廳</p>
                   <div className="space-y-1.5">
                     {unscheduledRestaurants.map((r) => (
-                      <div
-                        key={r.id}
-                        className="flex items-start justify-between gap-2 px-2 py-2 rounded-lg bg-gray-50 border border-gray-100"
-                      >
+                      <div key={r.id} className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-100">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1 flex-wrap">
-                            <span className="text-sm font-medium text-gray-800 leading-tight">{r.name || '（未命名）'}</span>
-                            {r.priority === 'must' && (
-                              <span className="text-xs bg-red-100 text-red-600 px-1 py-0.5 rounded leading-none flex-shrink-0">必去</span>
-                            )}
+                            <span className="text-xs font-semibold text-slate-800 leading-tight">{r.name || '（未命名）'}</span>
+                            {r.priority === 'must' && <span className="badge-red">必去</span>}
                           </div>
-                          <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
-                            {MEAL_TYPE_LABEL[r.mealType]}
-                          </span>
+                          <span className="badge-amber mt-0.5">{MEAL_TYPE_LABEL[r.mealType]}</span>
                         </div>
                         {isEditing && (
                           <button
-                            onClick={() => addFromExisting(
-                              { ...r, durationMinutes: r.dishType === 'snack' ? 30 : 60 },
-                              'restaurant'
-                            )}
+                            onClick={() => addFromExisting({ ...r, durationMinutes: r.dishType === 'snack' ? 30 : 60 }, 'restaurant')}
                             title={`加入第 ${activeDay} 天`}
-                            className="text-blue-500 hover:text-blue-700 text-xl leading-none flex-shrink-0 mt-0.5 font-light"
-                          >
-                            +
-                          </button>
+                            className="w-6 h-6 flex items-center justify-center rounded-lg bg-amber-50 text-amber-500 hover:bg-amber-100 hover:text-amber-700 transition-colors flex-shrink-0 font-bold text-sm"
+                          >+</button>
                         )}
                       </div>
                     ))}
