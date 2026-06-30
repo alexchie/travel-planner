@@ -288,20 +288,32 @@ export async function optimizeWithClaude(
     console.warn('Google Maps distance matrix failed:', e)
   }
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': ANTHROPIC_KEY!,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 16000,
-      messages: [{ role: 'user', content: buildPrompt(trip, attractions, restaurants, accommodations, locs, locNames, matrix) }],
-    }),
-  })
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 90_000)
+
+  let res: Response
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'x-api-key': ANTHROPIC_KEY!,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 16000,
+        messages: [{ role: 'user', content: buildPrompt(trip, attractions, restaurants, accommodations, locs, locNames, matrix) }],
+      }),
+    })
+  } catch (e) {
+    const isAbort = e instanceof DOMException && e.name === 'AbortError'
+    throw new Error(isAbort ? 'Claude API 逾時（90 秒），請稍後再試' : `網路錯誤：${String(e)}`)
+  } finally {
+    clearTimeout(timer)
+  }
 
   if (!res.ok) {
     const err = await res.text()
