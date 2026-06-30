@@ -174,24 +174,24 @@ export default function ItineraryView() {
       )}
 
       {isEditing && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 text-sm text-blue-700">
-          拖曳景點/餐廳調整順序，點 × 可刪除，點「+ 新增地點」或右側清單的 + 可加入地點。
+        <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-700">
+          拖曳調整順序 · 點 × 刪除 · 點「+ 新增地點」加入
         </div>
       )}
 
       {missingMust.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-          <p className="text-sm font-semibold text-red-700 mb-2">⚠️ 以下必要地點未被排入行程：</p>
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <p className="text-sm font-semibold text-red-700 mb-2">以下必要地點未被排入行程：</p>
           <div className="flex flex-wrap gap-2">
             {missingMust.map((item) => (
-              <span key={item.id} className="text-xs bg-red-100 text-red-700 px-2.5 py-1 rounded-full font-medium">
+              <span key={item.id} className="badge-red">
                 {'mealType' in item
                   ? `${item.name}（${MEAL_TYPE_LABEL[(item as typeof restaurants[0]).mealType]}）`
                   : item.name}
               </span>
             ))}
           </div>
-          <p className="text-xs text-red-500 mt-2">可能因營業時間衝突或行程排不下，請檢查結果。</p>
+          <p className="text-xs text-red-400 mt-2">可能因營業時間衝突或排不下，請檢查結果。</p>
         </div>
       )}
 
