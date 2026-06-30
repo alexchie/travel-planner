@@ -13,9 +13,12 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { DayItinerary, Stop } from '../../types'
+import type { DayItinerary, Stop, OpenHours } from '../../types'
 import { MEAL_TYPE_LABEL } from '../../types'
 import MapView from '../MapView'
+
+const DOW_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
+const DOW_ZH = ['日', '一', '二', '三', '四', '五', '六']
 
 const TYPE_COLOR: Record<string, string> = {
   attraction: 'bg-blue-500',
@@ -29,10 +32,41 @@ const TYPE_LABEL: Record<string, string> = {
   accommodation: '住宿',
 }
 
-function stopCardClass(stop: Stop): string {
-  if (stop.hasWarning) return 'border-orange-200 bg-orange-50'
-  if (stop.isAiRecommended) return 'border-teal-200 bg-teal-50'
-  return 'border-gray-100 bg-white'
+function toMin(t: string): number {
+  const [h, m] = t.split(':').map(Number)
+  return h * 60 + m
+}
+
+function computeHoursConflict(
+  stop: Stop,
+  date: string,
+  openHoursMap: Record<string, OpenHours>
+): { todayHours: { open: string; close: string } | null | undefined; conflictMsg: string | null } {
+  if (stop.type === 'accommodation') return { todayHours: undefined, conflictMsg: null }
+
+  const oh = openHoursMap[stop.name.trim()]
+  if (!oh) return { todayHours: undefined, conflictMsg: null }
+
+  const dowIdx = new Date(date).getDay()
+  const dayKey = DOW_KEYS[dowIdx]
+  const dh = oh[dayKey] ?? null
+
+  if (dh === null) {
+    return { todayHours: null, conflictMsg: `週${DOW_ZH[dowIdx]} 公休` }
+  }
+
+  const arrival = toMin(stop.arrivalTime)
+  const departure = toMin(stop.departureTime)
+  const open = toMin(dh.open)
+  const close = toMin(dh.close)
+  if (arrival < open || departure > close) {
+    return {
+      todayHours: dh,
+      conflictMsg: `規劃 ${stop.arrivalTime}–${stop.departureTime} 超出營業 ${dh.open}–${dh.close}`,
+    }
+  }
+
+  return { todayHours: dh, conflictMsg: null }
 }
 
 function StopCard({
@@ -40,11 +74,15 @@ function StopCard({
   index,
   isEditing,
   onRemove,
+  date,
+  openHoursMap,
 }: {
   stop: Stop
   index: number
   isEditing: boolean
   onRemove?: () => void
+  date: string
+  openHoursMap: Record<string, OpenHours>
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: stop.id,
@@ -56,9 +94,20 @@ function StopCard({
     opacity: isDragging ? 0.5 : 1,
   }
 
+  const { todayHours, conflictMsg } = computeHoursConflict(stop, date, openHoursMap)
+  const hasOpenHoursData = todayHours !== undefined
+  const hasConflict = conflictMsg !== null
+  const showFallbackWarning = !hasOpenHoursData && stop.hasWarning && !!stop.warningMessage
+
+  const cardBg = hasConflict || showFallbackWarning
+    ? 'border-orange-200 bg-orange-50'
+    : stop.isAiRecommended
+    ? 'border-teal-200 bg-teal-50'
+    : 'border-gray-100 bg-white'
+
   return (
     <div ref={setNodeRef} style={style} className="relative">
-      <div className={`flex gap-3 p-3 rounded-lg border ${stopCardClass(stop)} shadow-sm`}>
+      <div className={`flex gap-3 p-3 rounded-lg border ${cardBg} shadow-sm`}>
         {isEditing && stop.type !== 'accommodation' && (
           <div
             {...attributes}
@@ -110,6 +159,13 @@ function StopCard({
                   <span className="ml-2 text-gray-400">（{stop.durationMinutes} 分鐘）</span>
                 )}
               </div>
+              {stop.type !== 'accommodation' && todayHours !== undefined && (
+                <div className={`text-xs mt-0.5 ${hasConflict ? 'text-orange-500 font-medium' : 'text-gray-400'}`}>
+                  營業：{todayHours === null
+                    ? '當日公休'
+                    : `${todayHours.open}–${todayHours.close}`}
+                </div>
+              )}
             </div>
             {isEditing && stop.type !== 'accommodation' && onRemove && (
               <button
@@ -120,7 +176,12 @@ function StopCard({
               </button>
             )}
           </div>
-          {stop.hasWarning && stop.warningMessage && (
+          {conflictMsg && (
+            <div className="mt-1.5 text-xs text-orange-600 bg-orange-100 rounded px-2 py-1">
+              ⚠ {conflictMsg}
+            </div>
+          )}
+          {showFallbackWarning && (
             <div className="mt-1.5 text-xs text-orange-600 bg-orange-100 rounded px-2 py-1">
               ⚠ {stop.warningMessage}
             </div>
