@@ -122,44 +122,34 @@ export default function ItineraryView() {
   const currentDay = itinerary.find((d) => d.dayIndex === activeDay)
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 fade-in">
       {state.aiError && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 text-sm text-yellow-800">
-          AI 規劃失敗，已改用本地演算法排程。原因：{state.aiError}
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+          AI 規劃失敗，已改用本地演算法。原因：{state.aiError}
         </div>
       )}
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">最佳行程</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {isEditing ? '編輯模式（副本）' : '系統規劃原始版本'}
+          <h2 className="text-2xl font-bold text-slate-900">行程規劃結果</h2>
+          <p className="text-sm text-slate-500 mt-0.5">
+            {itinerary.length} 天 · {itinerary.reduce((s, d) => s + d.stops.filter((st) => st.type !== 'accommodation').length, 0)} 個地點
+            {isEditing && <span className="ml-2 badge-blue">編輯模式</span>}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
           {isEditing ? (
             <>
-              <button onClick={resetEdit} className="btn-secondary text-sm">
-                還原原始版本
-              </button>
-              <button onClick={discardEdit} className="btn-secondary text-sm">
-                放棄編輯
-              </button>
-              <button onClick={saveEdit} className="btn-primary text-sm">
-                儲存完成
-              </button>
+              <button onClick={resetEdit} className="btn-secondary">還原</button>
+              <button onClick={discardEdit} className="btn-secondary">取消</button>
+              <button onClick={saveEdit} className="btn-primary">儲存</button>
             </>
           ) : (
-            <button onClick={enterEdit} className="btn-primary text-sm">
-              編輯行程
-            </button>
+            <>
+              <button onClick={enterEdit} className="btn-secondary">編輯行程</button>
+              <button onClick={() => dispatch({ type: 'GO_TO_FORM' })} className="btn-secondary">重新規劃</button>
+            </>
           )}
-          <button
-            onClick={() => dispatch({ type: 'GO_TO_FORM' })}
-            className="btn-secondary text-sm"
-          >
-            重新規劃
-          </button>
         </div>
       </div>
 
