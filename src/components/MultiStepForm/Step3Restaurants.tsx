@@ -155,7 +155,9 @@ export default function Step3Restaurants() {
                   />
                   {r.location.lat !== 0 && (
                     <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${r.location.lat},${r.location.lng}`}
+                      href={r.location.placeId
+                        ? `https://www.google.com/maps/place/?q=place_id:${r.location.placeId}`
+                        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name || r.location.address)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 mt-1.5 text-xs text-blue-500 hover:text-blue-700 underline"
