@@ -273,10 +273,16 @@ export function optimize(
 
         const openMin = timeToMinutes(dayHours.open)
         const closeMin = effectiveCloseMin(dayHours.open, dayHours.close)
-        if (arrival < openMin || departure > closeMin + 30) continue  // conflict — skip
 
-        validPositions.push({ item: pos.item, startMin: arrival })
-        simTime = departure
+        // Wait until opening if we arrive early, rather than skipping entirely
+        const adjustedArrival = Math.max(arrival, openMin)
+        const adjustedDeparture = adjustedArrival + pos.item.durationMinutes
+        if (adjustedDeparture > closeMin + 30) continue  // truly can't fit within hours
+        const travelBack = travelMinutes(pos.item.location, endLoc, mode)
+        if (adjustedDeparture + travelBack > CURFEW) continue  // too late to return
+
+        validPositions.push({ item: pos.item, startMin: adjustedArrival })
+        simTime = adjustedDeparture
         simLoc = pos.item.location
       }
 
