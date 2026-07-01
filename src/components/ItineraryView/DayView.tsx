@@ -139,8 +139,8 @@ function StopCard({
     : isWaypoint ? 'badge-gray'
     : TYPE_BADGE[stop.type]
 
-  const stopLabel = stop.mealType
-    ? MEAL_TYPE_LABEL[stop.mealType]
+  const stopLabel = stop.type === 'restaurant'
+    ? '吃的'
     : isStart ? '起點'
     : isEnd ? '終點'
     : TYPE_LABEL[stop.type]
