@@ -151,7 +151,7 @@ function buildPrompt(
   const totalDays = accommodations.length + 1
   const tripDates = getTripDates(trip.arrivalDatetime, trip.departureDatetime)
 
-  lines.push('你是專業旅遊行程規劃師。根據以下資料規劃最佳多日行程。目標：最小化總交通時間、避免走回頭路、地理相鄰的地點安排在同一天。只輸出 JSON，不要有其他說明文字。')
+  lines.push('你是專業旅遊行程規劃師。根據以下資料規劃最佳多日行程。目標優先順序如下（第一優先最重要）：【第一優先】將用戶提供的所有必要（必去）景點與餐廳全數排入行程；【第二優先】最小化總交通時間、避免走回頭路、地理相鄰的地點安排在同一天。只輸出 JSON，不要有其他說明文字。')
   lines.push('')
   lines.push(`行程：抵達 ${trip.arrivalDatetime}，離開 ${trip.departureDatetime}，交通方式：${TRANSPORT_LABEL[trip.transportMode]}，共 ${totalDays} 天`)
   lines.push('')
