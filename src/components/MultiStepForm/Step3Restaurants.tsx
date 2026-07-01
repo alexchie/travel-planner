@@ -153,6 +153,19 @@ export default function Step3Restaurants() {
                     nameValue={r.name}
                     onNameChange={(name) => update(r.id, { name })}
                   />
+                  {r.location.lat !== 0 && (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${r.location.lat},${r.location.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 mt-1.5 text-xs text-blue-500 hover:text-blue-700 underline"
+                    >
+                      <svg className="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      </svg>
+                      在 Google Maps 查看
+                    </a>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
