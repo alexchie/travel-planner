@@ -127,6 +127,22 @@ function validateAndDedup(
         if (arrival < open || departure > close) continue  // outside hours → remove
       }
 
+      // Enforce meal time windows for user restaurants
+      // Prevents Claude from moving e.g. 宵夜 restaurants into dinner slots
+      if (original && 'mealType' in original) {
+        const mealType = (original as { mealType: string }).mealType
+        const arrival = timeToMinutes(s.arrivalTime)
+        const MEAL_WINDOWS_CHECK: Record<string, [number, number]> = {
+          breakfast: [8 * 60, 11 * 60],
+          lunch: [11 * 60, 15 * 60],
+          dinner: [17 * 60, 22 * 60],
+          afternoon_tea: [13 * 60, 19 * 60],
+          supper: [22 * 60, 25 * 60],
+        }
+        const win = MEAL_WINDOWS_CHECK[mealType]
+        if (win && (arrival < win[0] || arrival >= win[1])) continue  // wrong time slot → remove
+      }
+
       validStops.push(s)
     }
 
