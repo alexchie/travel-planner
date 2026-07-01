@@ -16,7 +16,7 @@ const MEAL_WINDOWS: Record<Exclude<MealType, 'any'>, { start: number; end: numbe
   lunch: { start: 11 * 60, end: 14 * 60 },
   dinner: { start: 18 * 60, end: 21 * 60 },
   afternoon_tea: { start: 14 * 60, end: 18 * 60 },
-  supper: { start: 21 * 60, end: 24 * 60 },
+  supper: { start: 22 * 60, end: 24 * 60 },
 }
 
 const CURFEW = 22 * 60 + 30
