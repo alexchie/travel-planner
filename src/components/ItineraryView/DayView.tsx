@@ -216,9 +216,22 @@ function StopCard({
               )}
             </div>
 
-            {stop.notes && (
-              <div className="mt-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 leading-relaxed">
-                {stop.notes}
+            {(stop.notes || stop.type !== 'accommodation') && stop.location.lat !== 0 && (
+              <div className="mt-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 leading-relaxed space-y-1">
+                {stop.notes && <p>{stop.notes}</p>}
+                {stop.type !== 'accommodation' && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${stop.location.lat},${stop.location.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-600"
+                  >
+                    <svg className="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                    Google Maps
+                  </a>
+                )}
               </div>
             )}
 
