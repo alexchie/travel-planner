@@ -126,7 +126,9 @@ export default function Step2Attractions() {
                   />
                   {attr.location.lat !== 0 && (
                     <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${attr.location.lat},${attr.location.lng}`}
+                      href={attr.location.placeId
+                        ? `https://www.google.com/maps/place/?q=place_id:${attr.location.placeId}`
+                        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(attr.name || attr.location.address)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 mt-1.5 text-xs text-blue-500 hover:text-blue-700 underline"
