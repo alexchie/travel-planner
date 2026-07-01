@@ -148,14 +148,15 @@ function StopCard({
     : TYPE_LABEL[stop.type]
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes}>
+    <div ref={setNodeRef} style={style}>
       {/* Stop card */}
       <div className={`bg-white rounded-xl border border-slate-100 border-l-4 ${borderClass} shadow-sm overflow-hidden`}>
         <div className="flex gap-2 p-3.5">
-          {/* Drag handle */}
+          {/* Drag handle — attributes + listeners must both be on the handle for dnd-kit */}
           {isEditing && stop.type !== 'accommodation' && (
             <div
               ref={setActivatorNodeRef}
+              {...attributes}
               {...listeners}
               className="drag-handle flex items-center self-stretch px-0.5 text-slate-300 hover:text-slate-500"
             >
