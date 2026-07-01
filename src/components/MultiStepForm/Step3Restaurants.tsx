@@ -231,6 +231,17 @@ export default function Step3Restaurants() {
                   </div>
                 </div>
 
+                <div>
+                  <label className="label">備註（僅供自己參考）</label>
+                  <textarea
+                    className="input resize-none"
+                    rows={2}
+                    placeholder="例：必點招牌菜、需要排隊、店面較小..."
+                    value={r.notes ?? ''}
+                    onChange={(e) => update(r.id, { notes: e.target.value || undefined })}
+                  />
+                </div>
+
                 <div className="text-sm">
                   <p className="font-medium text-gray-700 mb-2">營業時間設定</p>
                   <OpenHoursEditor
