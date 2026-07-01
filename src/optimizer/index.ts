@@ -60,6 +60,7 @@ interface ScheduleItem {
   fixedStartMinutes?: number
   fixedEndMinutes?: number
   openHours: Record<string, { open: string; close: string } | null>
+  notes?: string
 }
 
 function effectiveCloseMin(openStr: string, closeStr: string): number {
