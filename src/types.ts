@@ -43,6 +43,7 @@ export interface Attraction {
   durationMinutes: number
   priority: Priority
   timeWindowRequired: TimeWindow | null
+  notes?: string
 }
 
 export interface Restaurant {
