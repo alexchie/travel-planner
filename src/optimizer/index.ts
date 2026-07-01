@@ -199,38 +199,68 @@ export function optimize(
     const mealItems = unscheduled.filter((i) => i.mealType && i.mealType in MEAL_WINDOWS)
     const nonMealItems = unscheduled.filter((i) => !i.mealType || !(i.mealType in MEAL_WINDOWS))
 
-    for (const meal of mealItems) {
+    // Sort by meal window start so breakfast/lunch come before dinner/supper
+    mealItems.sort((a, b) =>
+      MEAL_WINDOWS[a.mealType as Exclude<MealType, 'any'>].start -
+      MEAL_WINDOWS[b.mealType as Exclude<MealType, 'any'>].start
+    )
+    // Dinner (18:00) and supper (22:00) are "late meals" — schedule AFTER non-meal items
+    const earlyMeals = mealItems.filter(
+      (m) => MEAL_WINDOWS[m.mealType as Exclude<MealType, 'any'>].start < 18 * 60
+    )
+    const lateMeals = mealItems.filter(
+      (m) => MEAL_WINDOWS[m.mealType as Exclude<MealType, 'any'>].start >= 18 * 60
+    )
+
+    // Phase 1: schedule early meals (breakfast, lunch, afternoon_tea)
+    for (const meal of earlyMeals) {
       const dayHours = meal.openHours[dayKey]
       if (!dayHours) continue
-
       const window = MEAL_WINDOWS[meal.mealType as Exclude<MealType, 'any'>]
       const openMin = timeToMinutes(dayHours.open)
       const closeMin = effectiveCloseMin(dayHours.open, dayHours.close)
       const startMin = Math.max(cursor, window.start, openMin)
       if (startMin >= window.end || startMin >= closeMin) continue
-
       const mealEnd = startMin + meal.durationMinutes
       if (mealEnd > closeMin + 30) continue
-
       const travelBack = travelMinutes(meal.location, endLoc, mode)
-      if (mealEnd + travelBack > CURFEW) continue
+      if (mealEnd + travelBack > dayCurfew) continue
       scheduled.push({ item: meal, startMin })
       cursor = mealEnd
-      currentLoc = meal.location  // keep currentLoc in sync
+      currentLoc = meal.location
     }
 
+    // Phase 2: schedule non-meal items (mealType:'any' — snacks/restaurants with no fixed window)
     let positions = [...scheduled]
     for (const item of nonMealItems) {
       const travel = travelMinutes(currentLoc, item.location, mode)
       const arrival = cursor + travel
       if (!isOpenOnDay(item, dayKey, arrival)) continue
       const departure = arrival + item.durationMinutes
-      if (departure > 21 * 60) continue
       const travelBack = travelMinutes(item.location, endLoc, mode)
-      if (departure + travelBack > CURFEW) continue
+      if (departure + travelBack > dayCurfew) continue
       positions.push({ item, startMin: arrival })
       cursor = departure
       currentLoc = item.location
+    }
+
+    // Phase 3: schedule late meals (dinner, supper) — after non-meal items
+    for (const meal of lateMeals) {
+      const dayHours = meal.openHours[dayKey]
+      if (!dayHours) continue
+      const window = MEAL_WINDOWS[meal.mealType as Exclude<MealType, 'any'>]
+      const openMin = timeToMinutes(dayHours.open)
+      const closeMin = effectiveCloseMin(dayHours.open, dayHours.close)
+      const startMin = Math.max(cursor, window.start, openMin)
+      if (startMin >= window.end || startMin >= closeMin) continue
+      const mealEnd = startMin + meal.durationMinutes
+      if (mealEnd > closeMin + 30) continue
+      const travelBack = travelMinutes(meal.location, endLoc, mode)
+      if (mealEnd + travelBack > dayCurfew) continue
+      scheduled.push({ item: meal, startMin })
+      positions.push({ item: meal, startMin })
+      cursor = mealEnd
+      currentLoc = meal.location
     }
 
     positions.sort((a, b) => a.startMin - b.startMin)
