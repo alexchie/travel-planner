@@ -197,7 +197,6 @@ export function optimize(
     const mealItems = unscheduled.filter((i) => i.mealType && i.mealType in MEAL_WINDOWS)
     const nonMealItems = unscheduled.filter((i) => !i.mealType || !(i.mealType in MEAL_WINDOWS))
 
-    const toInsert = [...nonMealItems]
     for (const meal of mealItems) {
       const dayHours = meal.openHours[dayKey]
       if (!dayHours) continue
@@ -215,10 +214,11 @@ export function optimize(
       if (mealEnd + travelBack > CURFEW) continue
       scheduled.push({ item: meal, startMin })
       cursor = mealEnd
+      currentLoc = meal.location  // keep currentLoc in sync
     }
 
     let positions = [...scheduled]
-    for (const item of toInsert) {
+    for (const item of nonMealItems) {
       const travel = travelMinutes(currentLoc, item.location, mode)
       const arrival = cursor + travel
       if (!isOpenOnDay(item, dayKey, arrival)) continue
@@ -245,6 +245,42 @@ export function optimize(
         ...positions.filter((p) => fixedSet.has(p.item.id)),
         ...reordered,
       ].sort((a, b) => a.startMin - b.startMin)
+    }
+
+    // Forward validation pass: recompute actual arrival times and remove
+    // flexible items whose real arrival conflicts with business hours.
+    // This fixes conflicts introduced by 2-opt reordering.
+    {
+      let simTime = dayIdx === 0 ? timeToMinutes(trip.arrivalDatetime.slice(11, 16)) : 9 * 60
+      let simLoc = startLoc
+      const validPositions: Slot[] = []
+
+      for (const pos of positions) {
+        const travel = travelMinutes(simLoc, pos.item.location, mode)
+        const arrival = simTime + travel
+        const departure = arrival + pos.item.durationMinutes
+
+        if (fixedSet.has(pos.item.id)) {
+          // Fixed time-window item: always include; warn later in stops loop
+          validPositions.push({ item: pos.item, startMin: arrival })
+          simTime = departure
+          simLoc = pos.item.location
+          continue
+        }
+
+        const dayHours = pos.item.openHours[dayKey]
+        if (!dayHours) continue  // closed this day — stays in items for next day
+
+        const openMin = timeToMinutes(dayHours.open)
+        const closeMin = effectiveCloseMin(dayHours.open, dayHours.close)
+        if (arrival < openMin || departure > closeMin + 30) continue  // conflict — skip
+
+        validPositions.push({ item: pos.item, startMin: arrival })
+        simTime = departure
+        simLoc = pos.item.location
+      }
+
+      positions = validPositions
     }
 
     const stops: Stop[] = []
