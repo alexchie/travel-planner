@@ -283,9 +283,17 @@ interface Props {
 
 export default function DayView({ day, dayIdx, isEditing, onReorder, onAddStop, onRemoveStop, openHoursMap }: Props) {
   const [showMap, setShowMap] = useState(true)
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
+
+  const activeStop = activeId ? day.stops.find((s) => s.id === activeId) ?? null : null
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(String(event.active.id))
+  }
 
   function handleDragEnd(event: DragEndEvent) {
+    setActiveId(null)
     const { active, over } = event
     if (!over || active.id === over.id) return
     const oldIdx = day.stops.findIndex((s) => s.id === active.id)
