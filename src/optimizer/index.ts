@@ -299,6 +299,7 @@ export function optimize(
 
       stops.push({
         id: uuidv4(),
+        itemId: item.id,
         type: item.type,
         name: item.name,
         location: item.location,
