@@ -56,6 +56,7 @@ export interface Restaurant {
   assignedDay: number | null
   dishType: DishType
   priority: Priority
+  notes?: string
 }
 
 export interface Accommodation {
