@@ -19,7 +19,7 @@ const MEAL_WINDOWS: Record<Exclude<MealType, 'any'>, { start: number; end: numbe
   supper: { start: 22 * 60, end: 24 * 60 },
 }
 
-const CURFEW = 22 * 60 + 30
+const CURFEW = 24 * 60
 
 function minutesToTime(minutes: number): string {
   const h = Math.floor(minutes / 60) % 24
