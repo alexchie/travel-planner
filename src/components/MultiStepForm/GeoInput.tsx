@@ -227,7 +227,7 @@ export default function GeoInput({ value, onChange, onOpenHours, onNameChange, n
     justSelectedRef.current = true
     if (debounceRef.current) clearTimeout(debounceRef.current)
 
-    onChange({ lat: parseFloat(r.lat), lng: parseFloat(r.lon), address: r.display_name })
+    onChange({ lat: parseFloat(r.lat), lng: parseFloat(r.lon), address: r.display_name, placeId: r.google_place_id })
 
     const selectedName = r.short_name || r.display_name.split(',')[0].trim()
     if (isNameMode) {
