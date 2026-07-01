@@ -65,17 +65,33 @@ function getTripDates(arrivalDatetime: string, departureDatetime: string): strin
   return dates
 }
 
+function matchOriginalItem(
+  stop: Stop,
+  attractions: Attraction[],
+  restaurants: Restaurant[],
+): Attraction | Restaurant | undefined {
+  const byCoord = (item: { location: { lat: number; lng: number } }) =>
+    Math.abs(item.location.lat - stop.location.lat) < 0.001 &&
+    Math.abs(item.location.lng - stop.location.lng) < 0.001
+  const byName = (item: { name: string }) =>
+    item.name.trim().toLowerCase() === stop.name.trim().toLowerCase()
+
+  return (
+    attractions.find(a => byCoord(a) || byName(a)) ??
+    restaurants.find(r => byCoord(r) || byName(r))
+  )
+}
+
 function validateAndDedup(
   itinerary: DayItinerary[],
   attractions: Attraction[],
   restaurants: Restaurant[],
 ): DayItinerary[] {
-  const seenNames = new Set<string>()
+  const seenIds = new Set<string>()
 
   return itinerary.map((day) => {
     const dowIdx = day.date ? new Date(day.date).getDay() : -1
     const dowKey = dowIdx >= 0 ? DOW_KEYS[dowIdx] : null
-    const dowLabel = dowIdx >= 0 ? DOW_ZH[dowIdx] : ''
 
     const validStops: Stop[] = []
     for (const stop of day.stops) {
@@ -84,33 +100,31 @@ function validateAndDedup(
         continue
       }
 
-      if (!stop.isAiRecommended) {
-        const nameKey = stop.name.trim().toLowerCase()
-        if (seenNames.has(nameKey)) continue
-        seenNames.add(nameKey)
+      if (stop.isAiRecommended) {
+        validStops.push(stop)
+        continue
       }
 
-      let s = { ...stop }
+      const original = matchOriginalItem(stop, attractions, restaurants)
+      const dedupeKey = original?.id ?? stop.name.trim().toLowerCase()
+      if (seenIds.has(dedupeKey)) continue
+      seenIds.add(dedupeKey)
 
-      if (dowKey && !stop.isAiRecommended) {
-        const attr = attractions.find(a => a.name.trim() === stop.name.trim())
-        const rest = restaurants.find(r => r.name.trim() === stop.name.trim())
-        const oh = attr?.openHours ?? rest?.openHours
+      // Normalise name to original and attach itemId so ItineraryView can identify it
+      let s: Stop = original
+        ? { ...stop, name: original.name, itemId: original.id }
+        : { ...stop }
 
-        if (oh) {
-          const dh = oh[dowKey]
-          if (!dh) {
-            s = { ...s, hasWarning: true, warningMessage: `週${dowLabel}公休，請調整日期` }
-          } else {
-            const open = timeToMinutes(dh.open)
-            const close = effectiveCloseMin(dh.open, dh.close)
-            const arrival = timeToMinutes(s.arrivalTime)
-            const departure = timeToMinutes(s.departureTime)
-            if (arrival < open || departure > close) {
-              s = { ...s, hasWarning: true, warningMessage: `超出營業時間（${dh.open}–${dh.close}）` }
-            }
-          }
-        }
+      // Business hours check — remove conflicting stops entirely
+      if (dowKey && original) {
+        const dh = original.openHours[dowKey]
+        if (!dh) continue  // closed this day → skip (appears as unscheduled)
+
+        const open = timeToMinutes(dh.open)
+        const close = effectiveCloseMin(dh.open, dh.close)
+        const arrival = timeToMinutes(s.arrivalTime)
+        const departure = timeToMinutes(s.departureTime)
+        if (arrival < open || departure > close) continue  // outside hours → skip
       }
 
       validStops.push(s)
