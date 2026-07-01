@@ -329,7 +329,7 @@ export default function DayView({ day, dayIdx, isEditing, onReorder, onAddStop, 
         </div>
       )}
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <SortableContext
           items={day.stops.map((s) => s.id)}
           strategy={verticalListSortingStrategy}
@@ -348,6 +348,13 @@ export default function DayView({ day, dayIdx, isEditing, onReorder, onAddStop, 
             ))}
           </div>
         </SortableContext>
+        <DragOverlay>
+          {activeStop ? (
+            <div className="bg-white rounded-xl border border-slate-200 border-l-4 border-l-blue-400 shadow-lg px-3.5 py-2.5 text-sm font-semibold text-slate-800 opacity-95">
+              {activeStop.name}
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
 
       {isEditing && onAddStop && (
