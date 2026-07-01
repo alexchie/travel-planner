@@ -266,7 +266,9 @@ export function optimize(
     positions.sort((a, b) => a.startMin - b.startMin)
 
     const fixedSet = new Set(fixedItems.map((i) => i.id))
-    const flexPositions = positions.filter((p) => !fixedSet.has(p.item.id))
+    // Exclude meal items from 2-opt to preserve their scheduled time windows
+    const fixedOrMealIds = new Set([...fixedItems.map((i) => i.id), ...mealItems.map((m) => m.id)])
+    const flexPositions = positions.filter((p) => !fixedOrMealIds.has(p.item.id))
     if (flexPositions.length > 3) {
       const pts = flexPositions.map((p) => p.item.location)
       const matrix = pts.map((a) => pts.map((b) => travelMinutes(a, b, mode)))
@@ -274,7 +276,7 @@ export function optimize(
       const improved = twoOptImprove(indices, matrix)
       const reordered = improved.map((i) => flexPositions[i])
       positions = [
-        ...positions.filter((p) => fixedSet.has(p.item.id)),
+        ...positions.filter((p) => fixedOrMealIds.has(p.item.id)),
         ...reordered,
       ].sort((a, b) => a.startMin - b.startMin)
     }
