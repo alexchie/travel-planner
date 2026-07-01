@@ -230,6 +230,17 @@ export default function Step2Attractions() {
                   )}
                 </div>
 
+                <div>
+                  <label className="label">備註（僅供自己參考）</label>
+                  <textarea
+                    className="input resize-none"
+                    rows={2}
+                    placeholder="例：需要預約、停車方便、推薦下午去..."
+                    value={attr.notes ?? ''}
+                    onChange={(e) => update(attr.id, { notes: e.target.value || undefined })}
+                  />
+                </div>
+
                 <div className="text-sm">
                   <p className="font-medium text-gray-700 mb-2">營業時間設定</p>
                   <OpenHoursEditor
