@@ -248,7 +248,7 @@ function buildPrompt(
   lines.push('  - 午餐：11:00–14:00（arrivalTime 必須在此區間內）')
   lines.push('  - 晚餐：18:00–21:00（arrivalTime 必須在此區間內）')
   lines.push('  - 下午茶：14:00–18:00（可選，限小吃，最多 1~2 個）')
-  lines.push('  - 宵夜：21:00–00:00（可選，限小吃，最多 1~2 個）')
+  lines.push('  - 宵夜：22:00–00:00（可選，限小吃，最多 1~2 個）')
   lines.push('【餐廳不足時的處理】')
   lines.push('- 僅當用戶提供的同餐別餐廳已全部排完，且該天仍缺少早/午/晚某餐時，才可推薦新餐廳（isAiRecommended: true）')
   lines.push('【其他限制】')
