@@ -136,6 +136,7 @@ export function optimize(
         ? timeToMinutes(a.timeWindowRequired.startTime)
         : undefined,
       openHours: a.openHours,
+      notes: a.notes,
     })),
     ...restaurants.map((r) => ({
       id: r.id,
@@ -150,6 +151,7 @@ export function optimize(
           ? r.assignedDay
           : undefined,
       openHours: r.openHours,
+      notes: r.notes,
     })),
   ]
 
