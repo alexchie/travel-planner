@@ -196,10 +196,18 @@ export function optimize(
 
     const toInsert = [...nonMealItems]
     for (const meal of mealItems) {
+      const dayHours = meal.openHours[dayKey]
+      if (!dayHours) continue
+
       const window = MEAL_WINDOWS[meal.mealType as Exclude<MealType, 'any'>]
-      const startMin = Math.max(cursor, window.start)
-      if (startMin >= window.end) continue
+      const openMin = timeToMinutes(dayHours.open)
+      const closeMin = effectiveCloseMin(dayHours.open, dayHours.close)
+      const startMin = Math.max(cursor, window.start, openMin)
+      if (startMin >= window.end || startMin >= closeMin) continue
+
       const mealEnd = startMin + meal.durationMinutes
+      if (mealEnd > closeMin + 30) continue
+
       const travelBack = travelMinutes(meal.location, endLoc, mode)
       if (mealEnd + travelBack > CURFEW) continue
       scheduled.push({ item: meal, startMin })
