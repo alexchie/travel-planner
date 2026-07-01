@@ -79,6 +79,7 @@ export interface Stop {
   warningMessage?: string
   mealType?: MealType
   isAiRecommended?: boolean
+  notes?: string
 }
 
 export interface DayItinerary {
