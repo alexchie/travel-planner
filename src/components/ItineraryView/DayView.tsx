@@ -221,7 +221,9 @@ function StopCard({
                 {stop.notes && <p>{stop.notes}</p>}
                 {stop.type !== 'accommodation' && (
                   <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${stop.location.lat},${stop.location.lng}`}
+                    href={stop.location.placeId
+                      ? `https://www.google.com/maps/place/?q=place_id:${stop.location.placeId}`
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.name)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-600"
