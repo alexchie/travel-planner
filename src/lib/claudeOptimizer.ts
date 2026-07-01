@@ -212,6 +212,14 @@ function buildPrompt(
   }
 
   lines.push('')
+  lines.push('【最高優先原則（所有規則中優先級最高，不得違反）】')
+  lines.push('- 用戶提供的所有景點與餐廳必須優先排入行程，直到全數排完（或因營業時間無法安排才可放棄）')
+  lines.push('- isAiRecommended: true 的 AI 推薦地點只能在以下兩種情況使用：')
+  lines.push('  1. 用戶提供的同餐別餐廳已全數排完，但該天仍缺少早/午/晚某一餐')
+  lines.push('  2. 用戶提供的所有景點已全數排完，且兩餐之間完全沒有景點可填充')
+  lines.push('- 絕對禁止：用戶景點或餐廳尚未排完時，就推薦 AI 地點取而代之')
+
+  lines.push('')
   lines.push('【規則—地理】')
   lines.push('- 必去景點/餐廳一定要排入；彈性可省略')
   lines.push('- 同一天地點需地理相鄰，嚴格避免來回奔波')
@@ -221,7 +229,7 @@ function buildPrompt(
   lines.push('')
   lines.push('【規則—不得重複（嚴格遵守）】')
   lines.push('- 同一家餐廳或景點在整個行程中只能出現一次，無論是哪一天')
-  lines.push('- 若用戶提供的餐廳已全數排完，但某餐別仍無對應正餐，必須以 isAiRecommended: true 推薦一家附近合適的新餐廳，絕對不得重複使用已出現過的餐廳')
+  lines.push('- 若需推薦 AI 餐廳，絕對不得重複使用已出現過的餐廳')
 
   lines.push('')
   lines.push('【規則—營業時間（嚴格遵守，違反即視為無效行程）】')
@@ -242,11 +250,11 @@ function buildPrompt(
   lines.push('  - 下午茶：14:00–18:00（可選，限小吃，最多 1~2 個）')
   lines.push('  - 宵夜：21:00–00:00（可選，限小吃，最多 1~2 個）')
   lines.push('【餐廳不足時的處理】')
-  lines.push('- 若用戶提供的餐廳已全部排完，仍有未填滿的早/午/晚餐時段，必須推薦新餐廳（isAiRecommended: true），不得重複使用已排入的餐廳')
+  lines.push('- 僅當用戶提供的同餐別餐廳已全部排完，且該天仍缺少早/午/晚某餐時，才可推薦新餐廳（isAiRecommended: true）')
   lines.push('【其他限制】')
   lines.push('- 每天每個必要餐別（早/午/晚）各最多 1 個正餐，絕對不能同一天出現兩個午餐正餐')
   lines.push('- 小吃（snack）不佔正餐名額，可在景點之間額外插入')
-  lines.push('- 【補景規則】若連續兩個用餐 stop 之間沒有任何景點，必須在兩餐之間插入 1~2 個附近合適的景點，並在該 stop 設 isAiRecommended: true')
+  lines.push('- 【補景規則】僅當用戶提供的所有景點已全數排完後，若兩餐之間仍無任何景點，才可插入 AI 推薦景點（isAiRecommended: true）')
 
   lines.push('')
   lines.push('【每天 stops 陣列結構（嚴格遵守，不得違反）】')
