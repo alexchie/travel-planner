@@ -221,8 +221,8 @@ function buildPrompt(
 
   lines.push('')
   lines.push('【規則—地理】')
-  lines.push('- 必去景點/餐廳一定要排入；彈性可省略')
-  lines.push('- 同一天地點需地理相鄰，嚴格避免來回奔波')
+  lines.push('- 【第一優先】必去景點/餐廳一定要全數排入，即使需要犧牲地理最佳化也必須排入')
+  lines.push('- 【第二優先】在已排入所有必去地點的前提下，同一天地點盡量地理相鄰、避免來回奔波')
   lines.push('- 每個地點只能在整個行程中出現一次，不得重複排入')
   lines.push('- travelTimeToNext 填入到下一個地點的交通分鐘（最後一個 stop 填 0）')
 
