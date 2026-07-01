@@ -110,9 +110,9 @@ function validateAndDedup(
       if (seenIds.has(dedupeKey)) continue
       seenIds.add(dedupeKey)
 
-      // Normalise name to original and attach itemId so ItineraryView can identify it
+      // Normalise name to original, attach itemId and carry over user notes
       let s: Stop = original
-        ? { ...stop, name: original.name, itemId: original.id }
+        ? { ...stop, name: original.name, itemId: original.id, notes: original.notes }
         : { ...stop }
 
       // Business hours check — remove conflicting stops entirely
