@@ -39,19 +39,21 @@ export default function ItineraryView() {
   for (const a of attractions) openHoursMap[a.name.trim()] = a.openHours
   for (const r of restaurants) openHoursMap[r.name.trim()] = r.openHours
 
+  const allScheduledItemIds = new Set(
+    itinerary.flatMap((d) => d.stops.flatMap((s) => s.itemId ? [s.itemId] : []))
+  )
   const allStopNames = new Set(
     itinerary.flatMap((d) => d.stops.map((s) => s.name.trim().toLowerCase()))
   )
+  const isScheduled = (item: { id: string; name: string }) =>
+    allScheduledItemIds.has(item.id) || allStopNames.has(item.name.trim().toLowerCase())
+
   const missingMust = [
-    ...attractions.filter((a) => a.priority === 'must' && !allStopNames.has(a.name.trim().toLowerCase())),
-    ...restaurants.filter((r) => r.priority === 'must' && !allStopNames.has(r.name.trim().toLowerCase())),
+    ...attractions.filter((a) => a.priority === 'must' && !isScheduled(a)),
+    ...restaurants.filter((r) => r.priority === 'must' && !isScheduled(r)),
   ]
-  const unscheduledAttractions = attractions.filter(
-    (a) => !allStopNames.has(a.name.trim().toLowerCase())
-  )
-  const unscheduledRestaurants = restaurants.filter(
-    (r) => !allStopNames.has(r.name.trim().toLowerCase())
-  )
+  const unscheduledAttractions = attractions.filter((a) => !isScheduled(a))
+  const unscheduledRestaurants = restaurants.filter((r) => !isScheduled(r))
   const hasSidebar = unscheduledAttractions.length > 0 || unscheduledRestaurants.length > 0
 
   function handleReorder(dayIndex: number, fromIdx: number, toIdx: number) {
