@@ -313,6 +313,7 @@ export function optimize(
         hasWarning: itemWarning,
         warningMessage: warningMsg || undefined,
         mealType: item.mealType,
+        notes: item.notes,
       })
 
       totalTravel += travel
