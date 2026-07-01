@@ -242,7 +242,7 @@ function buildPrompt(
   lines.push('')
   lines.push('【規則—餐食（嚴格遵守）】')
   lines.push('【必要餐別】每天一定要安排早餐、午餐、晚餐各一個正餐（full_meal），這三餐是每天的硬性規定，不得省略。')
-  lines.push('【可選餐別】下午茶、宵夜為可選，若行程有排才加入，且這兩個餐別只能排小吃（snack），絕對不可排正餐（full_meal）。')
+  lines.push('【可選餐別】下午茶、宵夜為可選，若行程有排才加入。下午茶只能排小吃（snack）。宵夜規則見下方。')
   lines.push('【時段定義】')
   lines.push('  - 早餐：08:00–10:30（arrivalTime 必須在此區間內）')
   lines.push('  - 午餐：11:00–14:00（arrivalTime 必須在此區間內）')
