@@ -65,6 +65,7 @@ export interface Accommodation {
 
 export interface Stop {
   id: string
+  itemId?: string
   type: StopType
   name: string
   location: GeoPoint
