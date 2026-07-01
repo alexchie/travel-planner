@@ -282,8 +282,7 @@ export function optimize(
     }
 
     // Forward validation pass: recompute actual arrival times and remove
-    // flexible items whose real arrival conflicts with business hours.
-    // This fixes conflicts introduced by 2-opt reordering.
+    // items that conflict with business hours, meal windows, or day curfew.
     {
       let simTime = dayIdx === 0 ? timeToMinutes(trip.arrivalDatetime.slice(11, 16)) : 9 * 60
       let simLoc = startLoc
@@ -295,7 +294,6 @@ export function optimize(
         const departure = arrival + pos.item.durationMinutes
 
         if (fixedSet.has(pos.item.id)) {
-          // Fixed time-window item: always include; warn later in stops loop
           validPositions.push({ item: pos.item, startMin: arrival })
           simTime = departure
           simLoc = pos.item.location
@@ -303,17 +301,24 @@ export function optimize(
         }
 
         const dayHours = pos.item.openHours[dayKey]
-        if (!dayHours) continue  // closed this day — stays in items for next day
+        if (!dayHours) continue
 
         const openMin = timeToMinutes(dayHours.open)
         const closeMin = effectiveCloseMin(dayHours.open, dayHours.close)
 
-        // Wait until opening if we arrive early, rather than skipping entirely
-        const adjustedArrival = Math.max(arrival, openMin)
+        let adjustedArrival = Math.max(arrival, openMin)
+
+        // Also respect meal time windows so e.g. supper stays at 22:00+
+        if (pos.item.mealType && pos.item.mealType in MEAL_WINDOWS) {
+          const mw = MEAL_WINDOWS[pos.item.mealType as Exclude<MealType, 'any'>]
+          adjustedArrival = Math.max(adjustedArrival, mw.start)
+          if (adjustedArrival >= mw.end) continue  // outside meal window
+        }
+
         const adjustedDeparture = adjustedArrival + pos.item.durationMinutes
-        if (adjustedDeparture > closeMin + 30) continue  // truly can't fit within hours
+        if (adjustedDeparture > closeMin + 30) continue
         const travelBack = travelMinutes(pos.item.location, endLoc, mode)
-        if (adjustedDeparture + travelBack > CURFEW) continue  // too late to return
+        if (adjustedDeparture + travelBack > dayCurfew) continue
 
         validPositions.push({ item: pos.item, startMin: adjustedArrival })
         simTime = adjustedDeparture
