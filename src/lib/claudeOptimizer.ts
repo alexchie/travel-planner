@@ -220,6 +220,15 @@ function buildPrompt(
   lines.push('- 絕對禁止：用戶景點或餐廳尚未排完時，就推薦 AI 地點取而代之')
 
   lines.push('')
+  lines.push('【行程密度規則（不得違反）】')
+  lines.push('- 相鄰兩個景點/餐廳 stop 之間，扣除交通時間後，空白時段不得超過 90 分鐘')
+  lines.push('- 若出現超過 90 分鐘的空白，處理順序：')
+  lines.push('  1. 優先從用戶提供但尚未排入的景點或餐廳中，選出在該空白時段內有營業的地點插入')
+  lines.push('  2. 用戶地點全數排完仍有空白，才可插入 isAiRecommended: true 的 AI 景點或餐廳')
+  lines.push('- 行程應盡量緊湊；除非地點有 timeWindowRequired 時段限制，否則應盡早安排，不得刻意延後至特定時間（如日落、黃昏）')
+  lines.push('- 地點的 notes/備註欄僅為用戶個人備忘，不得作為排程依據，不得影響安排時間')
+
+  lines.push('')
   lines.push('【規則—地理】')
   lines.push('- 【第一優先】必去景點/餐廳一定要全數排入，即使需要犧牲地理最佳化也必須排入')
   lines.push('- 【第二優先】在已排入所有必去地點的前提下，同一天地點盡量地理相鄰、避免來回奔波')
