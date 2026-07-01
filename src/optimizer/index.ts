@@ -187,6 +187,8 @@ export function optimize(
 
     // Start time: arrival time on day 1, 9:00 on subsequent days
     let cursor = dayIdx === 0 ? timeToMinutes(trip.arrivalDatetime.slice(11, 16)) : 9 * 60
+    const isLastDay = dayIdx === days.length - 1
+    const dayCurfew = isLastDay ? timeToMinutes(trip.departureDatetime.slice(11, 16)) : CURFEW
 
     slots.sort((a, b) => a.startMin - b.startMin)
 
