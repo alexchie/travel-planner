@@ -254,7 +254,15 @@ function buildPrompt(
   lines.push('【其他限制】')
   lines.push('- 每天每個必要餐別（早/午/晚）各最多 1 個正餐，絕對不能同一天出現兩個午餐正餐')
   lines.push('- 小吃（snack）不佔正餐名額，可在景點之間額外插入')
+  lines.push('- 「都可以」餐別（mealType: any）代表無特定進食時段限制，可排入一天中任意空檔')
   lines.push('- 【補景規則】僅當用戶提供的所有景點已全數排完後，若兩餐之間仍無任何景點，才可插入 AI 推薦景點（isAiRecommended: true）')
+
+  lines.push('')
+  lines.push(`【最後一天離開時間限制（嚴格遵守，不得違反）】`)
+  lines.push(`- 最後一天（第${totalDays}天）的所有行程必須在 ${departureTime} 前全部完成`)
+  lines.push(`- 每個 stop 的 departureTime 加上到終點的交通時間，必須 <= ${departureTime}`)
+  lines.push(`- 若某餐別的正常時段（例如宵夜 22:00+）在 ${departureTime} 之後才開始，絕對不可提前移至其他時段安排，應直接省略`)
+  lines.push(`- 違反此規則（安排超過 ${departureTime} 的行程）將視為無效行程`)
 
   lines.push('')
   lines.push('【每天 stops 陣列結構（嚴格遵守，不得違反）】')
