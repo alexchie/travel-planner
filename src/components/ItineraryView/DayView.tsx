@@ -104,7 +104,7 @@ function StopCard({
   date: string
   openHoursMap: Record<string, OpenHours>
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
     id: stop.id,
     disabled: !isEditing || stop.type === 'accommodation',
   })
