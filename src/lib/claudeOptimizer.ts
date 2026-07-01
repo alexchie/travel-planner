@@ -115,16 +115,19 @@ function validateAndDedup(
         ? { ...stop, name: original.name, itemId: original.id, notes: original.notes }
         : { ...stop }
 
-      // Business hours check — remove conflicting stops entirely
+      // Business hours check
       if (dowKey && original) {
         const dh = original.openHours[dowKey]
-        if (!dh) continue  // closed this day → skip (appears as unscheduled)
+        if (!dh) continue  // closed this day → remove (truly impossible)
 
+        // Time conflict → keep but add warning so user can see it
         const open = timeToMinutes(dh.open)
         const close = effectiveCloseMin(dh.open, dh.close)
         const arrival = timeToMinutes(s.arrivalTime)
         const departure = timeToMinutes(s.departureTime)
-        if (arrival < open || departure > close) continue  // outside hours → skip
+        if (arrival < open || departure > close) {
+          s = { ...s, hasWarning: true, warningMessage: `超出營業時間（${dh.open}–${dh.close}）` }
+        }
       }
 
       validStops.push(s)
